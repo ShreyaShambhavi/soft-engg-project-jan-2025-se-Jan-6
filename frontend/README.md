@@ -1,4 +1,4 @@
-# soft-engg-project-jan-2025-se-Jan-6
+# FrontEnd of the Application
 Software Engineering Project [Jan 2025 Term - Team 6] - AI Agent for Academic Guidance
 
 This is a React-based frontend application designed to work with a Flask backend(which is not connected yet). It features functional, dynamic and a user-friendly interface.
