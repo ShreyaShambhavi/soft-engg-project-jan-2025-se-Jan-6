@@ -1,17 +1,34 @@
+/* eslint-disable no-unused-vars */
 import { useParams } from 'react-router-dom';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Home, Search, Bell, BookOpen, Calendar, Users2, FileText, Download, BookCopy, LayoutDashboard, FolderDown, FileQuestion, NotebookPen, Bot, MessagesSquare } from 'lucide-react';
 
-function CoursePage({ 
-    username = 'User', 
-    courseName = 'Software Engineering'
-}) {
+function CoursePage() {
+    const { courseName } = useParams();
     const [expandedSections, setExpandedSections] = useState({});
     const [selectedLecture, setSelectedLecture] = useState(null);
     const [activeTab, setActiveTab] = useState('Content');
     const [showChatbot, setShowChatbot] = useState(false);
     const [minimizedChatbot, setMinimizedChatbot] = useState(false);
     const [activeLectureTab, setActiveLectureTab] = useState('Lecture Overview');
+    const [courseData, setCourseData] = useState(null);
+
+    useEffect(() => {
+        fetchCourseData();
+    }, [courseName]);
+
+    const fetchCourseData = async () => {
+        try {
+            const response = await fetch(`http://127.0.0.1:5000/api/v1/courses/${courseName}`, {
+                method: 'GET',
+                credentials: 'include',
+            });
+            const data = await response.json();
+            setCourseData(data.course);
+        } catch (error) {
+            console.error('Error fetching course data:', error);
+        }
+    };
 
     const toggleSection = (section) => {
         setExpandedSections(prev => ({
@@ -33,11 +50,11 @@ function CoursePage({
         { icon: <Home />, label: "Home", url: "/" },
         { icon: <BookCopy />, label: "courses", url: "/courses" },
         { icon: <LayoutDashboard />, label: "dashboard", url: "/dashboard" },
-        { icon: <FolderDown />, label: "resources", url: "/resources/Software-Engineering" },
-        { icon: <FileQuestion />, label: "pyqs", url: "/resources/Software-Engineering/pyqs" },
-        { icon: <NotebookPen />, label: "notes", url: "/notes/Software-Engineering" },
-        { icon: <Bot />, label: "chatbot", url: "/chatbot/Software-Engineering" },
-        { icon: <MessagesSquare />, label: "chatroom", url: "/chatroom/Software-Engineering" },
+        { icon: <FolderDown />, label: "resources", url: `/resources/${courseName}` },
+        { icon: <FileQuestion />, label: "pyqs", url: `/resources/${courseName}/pyqs` },
+        { icon: <NotebookPen />, label: "notes", url: `/notes/${courseName}` },
+        { icon: <Bot />, label: "chatbot", url: `/chatbot/${courseName}` },
+        { icon: <MessagesSquare />, label: "chatroom", url: `/chatroom/${courseName}` },
     ];
 
     const weeks = Array.from({ length: 12 }, (_, i) => ({
@@ -67,7 +84,7 @@ function CoursePage({
             <div className="w-64 bg-white border-r">
                 <div className="p-4">
                     <div className="h-8">
-                        <img src="/iit-madras-logo.png" alt="IIT Madras Logo" className="h-full" />
+                        <img src="/IITm.png" alt="IIT Madras Logo" className="h-full" />
                     </div>
                     <div className="text-sm text-gray-600 mt-2">My Courses / {courseName}</div>
                 </div>
@@ -120,9 +137,9 @@ function CoursePage({
                         <Bell className="w-5 h-5 text-gray-400" />
                     </div>
                     <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-600">{username}</span>
+                        <span className="text-sm text-gray-600">{courseData?.instructor || 'Instructor'}</span>
                         <div className="w-8 h-8 bg-red-600 rounded-full text-white flex items-center justify-center">
-                            {username.charAt(0).toUpperCase()}
+                            {courseData?.instructor?.charAt(0).toUpperCase() || 'I'}
                         </div>
                     </div>
                 </header>
@@ -133,7 +150,7 @@ function CoursePage({
                         <div>
                             <div className="flex items-center justify-between mb-4">
                                 <div>
-                                    <h2 className="text-2xl font-semibold">UI Design, A User - Centered Approach</h2>
+                                    <h2 className="text-2xl font-semibold">{selectedLecture.title}</h2>
                                     <div className="flex items-center mt-1">
                                         <span className="text-yellow-400">★</span>
                                         <span className="ml-1">4.9</span>
@@ -179,8 +196,8 @@ function CoursePage({
                     ) : (
                         <div className="flex justify-between">
                             <div className="w-2/3 bg-white rounded-lg p-6 shadow-sm">
-                                <h1 className="text-2xl font-bold mb-4">Course Overview</h1>
-                                {/* Course content here */}
+                                <h1 className="text-2xl font-bold mb-4">{courseData?.title || 'Course Overview'}</h1>
+                                <p>{courseData?.description || 'Course description goes here.'}</p>
                             </div>
 
                             {/* Right Sidebar */}
@@ -189,19 +206,15 @@ function CoursePage({
                                     <h3 className="font-medium mb-4">Lectures & Tutorials</h3>
                                     <div className="text-sm text-gray-600 mb-2">2/7 Completed</div>
                                     <div className="space-y-2">
-                                        {Array.from({ length: 7 }, (_, i) => (
+                                        {courseData?.lectures?.map((lecture, i) => (
                                             <div key={i} className="flex items-center justify-between">
                                                 <button 
-                                                    onClick={() => setSelectedLecture({
-                                                        id: i + 1,
-                                                        type: i < 5 ? 'Lecture' : 'Tutorial',
-                                                        number: i + 1
-                                                    })}
+                                                    onClick={() => setSelectedLecture(lecture)}
                                                     className="text-sm text-left hover:text-red-600 transition-colors"
                                                 >
-                                                    {i + 1}.{i < 5 ? ` Lecture ${i + 1}` : ` Tutorial ${i - 4}`}
+                                                    {lecture.number}. {lecture.title}
                                                 </button>
-                                                {renderStatus(i < 2 ? 'completed' : 'pending')}
+                                                {renderStatus(lecture.status)}
                                             </div>
                                         ))}
                                     </div>

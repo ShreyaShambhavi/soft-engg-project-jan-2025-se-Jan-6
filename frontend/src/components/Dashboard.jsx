@@ -1,11 +1,34 @@
-// eslint-disable-next-line no-unused-vars
-import React, { useState } from "react";
+/* eslint-disable no-unused-vars */
+import React, { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, LineChart, Line, ResponsiveContainer } from "recharts";
-// eslint-disable-next-line no-unused-vars
 import { Bell, Home, Calendar, Users, BookOpen, Download, X, LayoutDashboard, BookCopy } from "lucide-react";
+import LogoutButton from "./LogoutButton";
 
 const Dashboard = () => {
   const [activeIcon, setActiveIcon] = useState('Home');
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/api/v1/user', {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data');
+        }
+
+        const data = await response.json();
+        setUser(data);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const studyHoursData = [
     { month: 'Dec 2024', you: 2, students: 3 },
@@ -107,8 +130,8 @@ const Dashboard = () => {
                 className="w-48 h-48 mx-auto mb-4 rounded-full object-cover">
                 </img>
                 
-                <h2 className="text-2xl font-bold mb-2">Welcome, User!</h2>
-                <p className="text-red-500">Level: Degree</p>
+                <h2 className="text-2xl font-bold mb-2">Welcome, {user ? user.username : 'User'}!</h2>
+                <p className="text-red-500">Role: {user ? user.roles.join(', ') : 'Degree'}</p>
                 <p className="text-red-500">CGPA: 8.0</p>
               </div>
             </div>
@@ -215,6 +238,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
+            <LogoutButton />
           </div>
         </div>
       </div>

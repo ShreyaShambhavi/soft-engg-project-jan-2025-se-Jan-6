@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useParams } from 'react-router-dom';
 import React, { useState } from 'react';
 import { Search, Bell, MoreHorizontal, Paperclip, Image, MapPin, Send, ChevronDown, X, Download } from 'lucide-react';
