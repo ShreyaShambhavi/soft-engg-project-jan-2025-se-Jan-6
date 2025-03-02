@@ -1,21 +1,77 @@
-/* eslint-disable no-unused-vars */
 import { useParams } from 'react-router-dom';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Home, Search, Bell, BookOpen, Calendar, Users2, FileText, Download, BookCopy, LayoutDashboard, FolderDown, FileQuestion, NotebookPen, Bot, MessagesSquare } from 'lucide-react';
+import CourseChatBotMini from './CourseChatBotMini';
+import LectureViewer from './LectureViewer'; // Import the LectureViewer component
 
 function CoursePage() {
     const { courseName } = useParams();
     const [expandedSections, setExpandedSections] = useState({});
     const [selectedLecture, setSelectedLecture] = useState(null);
-    const [activeTab, setActiveTab] = useState('Content');
     const [showChatbot, setShowChatbot] = useState(false);
     const [minimizedChatbot, setMinimizedChatbot] = useState(false);
     const [activeLectureTab, setActiveLectureTab] = useState('Lecture Overview');
     const [courseData, setCourseData] = useState(null);
 
+    const [chatbotSize, setChatbotSize] = useState({ width: 380, height: 450 });
+    const [isResizing, setIsResizing] = useState(false);
+    const chatbotRef = useRef(null);
+    const resizeStartPosRef = useRef({ x: 0, y: 0 });
+    const initialSizeRef = useRef({ width: 0, height: 0 });
+
     useEffect(() => {
         fetchCourseData();
     }, [courseName]);
+
+    useEffect(() => {
+        if (!isResizing) return;
+
+        const handleMouseMove = (e) => {
+            const deltaX = e.clientX - resizeStartPosRef.current.x;
+            const deltaY = e.clientY - resizeStartPosRef.current.y;
+
+            setChatbotSize({
+                width: Math.max(300, initialSizeRef.current.width + deltaX),
+                height: Math.max(300, initialSizeRef.current.height + deltaY),
+            });
+        };
+
+        const handleMouseUp = () => {
+            setIsResizing(false);
+            document.body.style.cursor = 'default';
+            document.body.style.userSelect = 'auto';
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        document.body.style.cursor = 'se-resize';
+        document.body.style.userSelect = 'none';
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = 'default';
+            document.body.style.userSelect = 'auto';
+        };
+    }, [isResizing]);
+
+    const handleStartResize = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        resizeStartPosRef.current = {
+            x: e.clientX,
+            y: e.clientY
+        };
+
+        initialSizeRef.current = {
+            width: chatbotSize.width,
+            height: chatbotSize.height
+        };
+
+        setIsResizing(true);
+    };
 
     const fetchCourseData = async () => {
         try {
@@ -48,13 +104,13 @@ function CoursePage() {
 
     const sidebarIcons = [
         { icon: <Home />, label: "Home", url: "/" },
-        { icon: <BookCopy />, label: "courses", url: "/courses" },
-        { icon: <LayoutDashboard />, label: "dashboard", url: "/dashboard" },
-        { icon: <FolderDown />, label: "resources", url: `/resources/${courseName}` },
-        { icon: <FileQuestion />, label: "pyqs", url: `/resources/${courseName}/pyqs` },
-        { icon: <NotebookPen />, label: "notes", url: `/notes/${courseName}` },
-        { icon: <Bot />, label: "chatbot", url: `/chatbot/${courseName}` },
-        { icon: <MessagesSquare />, label: "chatroom", url: `/chatroom/${courseName}` },
+        { icon: <BookCopy />, label: "Courses", url: "/courses" },
+        { icon: <LayoutDashboard />, label: "Dashboard", url: "/dashboard" },
+        { icon: <FolderDown />, label: "Resources", url: `/resources/${courseName}` },
+        { icon: <FileQuestion />, label: "PYQs", url: `/resources/${courseName}/pyqs` },
+        { icon: <NotebookPen />, label: "Notes", url: `/notes/${courseName}` },
+        { icon: <Bot />, label: "ChatBot", url: `/chatbot/${courseName}` },
+        { icon: <MessagesSquare />, label: "Chatroom", url: `/chatroom/${courseName}` },
     ];
 
     const weeks = Array.from({ length: 12 }, (_, i) => ({
@@ -62,25 +118,25 @@ function CoursePage() {
         status: i < 4 ? 'completed' : i === 4 ? 'in-progress' : 'pending'
     }));
 
-    const lectureTabs = [
-        'Lecture Overview',
-        'Resources & documents',
-        'Transcript',
-        'Summary'
-    ];
-
     return (
         <div className="min-h-screen bg-gray-50 flex">
-            {/* Left Icon Sidebar */}
             <div className="w-16 bg-white border-r flex flex-col items-center py-4 space-y-8">
                 {sidebarIcons.map((item, index) => (
-                    <div key={index} className="cursor-pointer" onClick={() => window.location.href = item.url}>
-                        {item.icon}
+                    <div
+                        key={index}
+                        className="cursor-pointer relative group"
+                        onClick={() => window.location.href = item.url}
+                    >
+                        <div className="flex items-center justify-center">
+                            {item.icon}
+                        </div>
+                        <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-sm rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-200 whitespace-nowrap z-10">
+                            {item.label}
+                        </div>
                     </div>
                 ))}
             </div>
 
-            {/* Main Navigation Sidebar */}
             <div className="w-64 bg-white border-r">
                 <div className="p-4">
                     <div className="h-8">
@@ -89,30 +145,7 @@ function CoursePage() {
                     <div className="text-sm text-gray-600 mt-2">My Courses / {courseName}</div>
                 </div>
 
-                {/* Course Navigation */}
                 <div className="border-t">
-                    <div className="flex border-b">
-                        <button 
-                            className={`px-4 py-2 text-sm font-medium ${activeTab === 'Content' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-600'}`}
-                            onClick={() => setActiveTab('Content')}
-                        >
-                            Content
-                        </button>
-                        <button 
-                            className={`px-4 py-2 text-sm font-medium ${activeTab === 'Quizzes' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-600'}`}
-                            onClick={() => setActiveTab('Quizzes')}
-                        >
-                            Quizzes
-                        </button>
-                        <button 
-                            className={`px-4 py-2 text-sm font-medium ${activeTab === 'End Term' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-600'}`}
-                            onClick={() => setActiveTab('End Term')}
-                        >
-                            End Term
-                        </button>
-                    </div>
-
-                    {/* Weeks List */}
                     <div className="py-2">
                         {weeks.map((week) => (
                             <button
@@ -128,9 +161,7 @@ function CoursePage() {
                 </div>
             </div>
 
-            {/* Main Content Area */}
             <div className="flex-1">
-                {/* Header */}
                 <header className="bg-white border-b px-6 py-3 flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                         <Search className="w-5 h-5 text-gray-400" />
@@ -144,110 +175,64 @@ function CoursePage() {
                     </div>
                 </header>
 
-                {/* Content Area */}
                 <div className="p-6">
-                    {selectedLecture ? (
-                        <div>
-                            <div className="flex items-center justify-between mb-4">
-                                <div>
-                                    <h2 className="text-2xl font-semibold">{selectedLecture.title}</h2>
-                                    <div className="flex items-center mt-1">
-                                        <span className="text-yellow-400">★</span>
-                                        <span className="ml-1">4.9</span>
-                                        <span className="text-gray-500 ml-1">(1395 reviews)</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <button className="px-3 py-1 text-sm border rounded">Share</button>
-                                    <button className="px-3 py-1 text-sm border rounded">Save</button>
-                                </div>
-                            </div>
-                            <div className="aspect-video bg-black rounded-lg overflow-hidden mb-4">
-                                <video 
-                                    controls
-                                    className="w-full h-full"
-                                    src={`/api/lectures/${selectedLecture.id}`}
-                                />
-                            </div>
-                            <div className="border-b">
-                                <div className="flex space-x-4">
-                                    {lectureTabs.map(tab => (
-                                        <button
-                                            key={tab}
-                                            onClick={() => setActiveLectureTab(tab)}
-                                            className={`px-4 py-2 ${activeLectureTab === tab ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-600'}`}
-                                        >
-                                            {tab}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            {activeLectureTab === 'Lecture Overview' && (
-                                <div className="mt-4">
-                                    <ul className="space-y-2">
-                                        <li>Introduction</li>
-                                        <li>Agile Methodologies</li>
-                                        <li>Other Methodologies</li>
-                                        <li>Conclusion</li>
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="flex justify-between">
-                            <div className="w-2/3 bg-white rounded-lg p-6 shadow-sm">
-                                <h1 className="text-2xl font-bold mb-4">{courseData?.title || 'Course Overview'}</h1>
-                                <p>{courseData?.description || 'Course description goes here.'}</p>
-                            </div>
-
-                            {/* Right Sidebar */}
-                            <div className="w-1/3 pl-6">
-                                <div className="bg-white rounded-lg p-4 shadow-sm">
-                                    <h3 className="font-medium mb-4">Lectures & Tutorials</h3>
-                                    <div className="text-sm text-gray-600 mb-2">2/7 Completed</div>
-                                    <div className="space-y-2">
-                                        {courseData?.lectures?.map((lecture, i) => (
-                                            <div key={i} className="flex items-center justify-between">
-                                                <button 
-                                                    onClick={() => setSelectedLecture(lecture)}
-                                                    className="text-sm text-left hover:text-red-600 transition-colors"
-                                                >
-                                                    {lecture.number}. {lecture.title}
-                                                </button>
-                                                {renderStatus(lecture.status)}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    {/* Use LectureViewer component here */}
+                    <LectureViewer
+                        username=""
+                        courseName={courseName}
+                        lecture={selectedLecture || { title: courseData?.title || 'Lecture Title', videoUrl: 'https://youtu.be/hKm_rh1RTJQ' }}
+                    />
                 </div>
             </div>
 
-            {/* AI Chatbot Button */}
             <div className="fixed bottom-4 right-4 z-50">
                 <button
-                    onClick={() => setShowChatbot(!showChatbot)}
+                    onClick={() => {
+                        setShowChatbot(!showChatbot);
+                        setMinimizedChatbot(false);
+                    }}
                     className="bg-red-600 text-white rounded-full px-4 py-2 flex items-center space-x-2 hover:bg-red-700 transition-colors"
                 >
                     <span>AI Chatbot</span>
                 </button>
             </div>
 
-            {/* Chatbot Popup */}
             {showChatbot && (
-                <div className={`fixed right-4 ${minimizedChatbot ? 'bottom-16' : 'bottom-20'} z-50 bg-white rounded-lg shadow-lg w-80 ${minimizedChatbot ? 'h-12' : 'h-96'} transition-all duration-300`}>
+                <div
+                    ref={chatbotRef}
+                    className="fixed right-4 bottom-20 z-50 bg-white rounded-lg shadow-lg flex flex-col overflow-hidden"
+                    style={{
+                        width: minimizedChatbot ? '300px' : `${chatbotSize.width}px`,
+                        height: minimizedChatbot ? '42px' : `${chatbotSize.height}px`,
+                        maxWidth: '80vw',
+                        maxHeight: '80vh'
+                    }}
+                >
                     <div className="p-3 border-b flex justify-between items-center">
-                        <h3 className="font-medium">AI Chatbot</h3>
+                        <div className="flex items-center">
+                            {!minimizedChatbot && (
+                                <button
+                                    className="w-6 h-6 ml-2 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-600"
+                                    onMouseDown={handleStartResize}
+                                    title="Resize chatbot"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M21 3L3 21"/>
+                                        <path d="M21 11L21 3L13 3"/>
+                                        <path d="M11 21L3 21L3 13"/>
+                                    </svg>
+                                </button>
+                            )}
+                            <h3 className="font-medium">AI Chatbot</h3>
+                        </div>
                         <div className="space-x-2">
-                            <button 
+                            <button
                                 onClick={() => setMinimizedChatbot(!minimizedChatbot)}
                                 className="text-gray-500 hover:text-gray-700"
                             >
                                 {minimizedChatbot ? 'Maximize' : 'Minimize'}
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setShowChatbot(false)}
                                 className="text-gray-500 hover:text-gray-700"
                             >
@@ -255,20 +240,10 @@ function CoursePage() {
                             </button>
                         </div>
                     </div>
+
                     {!minimizedChatbot && (
-                        <div className="p-4 h-full">
-                            <div className="h-full flex flex-col">
-                                <div className="flex-1 overflow-y-auto">
-                                    {/* Chat messages would go here */}
-                                </div>
-                                <div className="mt-4">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Type your message..."
-                                        className="w-full border rounded-lg px-3 py-2"
-                                    />
-                                </div>
-                            </div>
+                        <div className="flex-1 overflow-hidden">
+                            <CourseChatBotMini courseName={courseName} />
                         </div>
                     )}
                 </div>

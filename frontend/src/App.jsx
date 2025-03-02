@@ -7,11 +7,13 @@ import Signup from './components/Signup';
 import Dashboard from './components/Dashboard';
 import Courses from './components/Courses';
 import CoursePage from './components/CoursePage';
+import LectureViewer from './components/LectureViewer';
 import Assignment from './components/Assignment';
 import ChatRoom from './components/ChatRoom';
 import Announcements from './components/Announcements';
 import Profile from './components/Profile';
 import CourseChatBot from './components/CourseChatBot';
+import CourseChatBotMini from './components/CourseChatBotMini';
 import CourseNotes from './components/CourseNotes';
 import CourseResources from './components/CourseResources';
 import PYQs from './components/PYQs';
@@ -26,11 +28,13 @@ function App() {
       <Route path="/dashboard" element={<PrivateRoute element={Dashboard} />} />
       <Route path="/courses" element={<PrivateRoute element={Courses} />} />
       <Route path="/courses/:courseName" element={<PrivateRoute element={CoursePage} />} />
+      <Route path="/lectureviewer" element={<PrivateRoute element={LectureViewer} />} />
       <Route path="/assignment" element={<PrivateRoute element={Assignment} />} />
       <Route path="/chatroom/:courseChatRoom" element={<PrivateRoute element={ChatRoom} />} />
       <Route path="/announcements" element={<PrivateRoute element={Announcements} />} />
       <Route path="/profile" element={<PrivateRoute element={Profile} />} />
       <Route path="/chatbot/:courseChatBot" element={<PrivateRoute element={CourseChatBot} />} />
+      <Route path="/chatbot/:courseChatBotMini" element={<PrivateRoute element={CourseChatBotMini} />} />
       <Route path="/notes/:courseNotes" element={<PrivateRoute element={CourseNotes} />} />
       <Route path="/resources/:courseResources" element={<PrivateRoute element={CourseResources} />} />
       <Route path="/resources/:courseResources/pyqs" element={<PrivateRoute element={PYQs} />} />

@@ -149,6 +149,13 @@ def create_database(app):  # Pass the app instance to this function
             roles=['student']
         )
 
+        create_user_if_not_exists(
+            email="21f2000283@ds.study.iitm.ac.in",
+            username="21f2000283",
+            password="21f2000283",
+            roles=['student']
+        )
+
         # Helper function to find or create courses
         def find_or_create_course(name, description):
             course = Courses.query.filter_by(name=name).first()
