@@ -180,7 +180,7 @@ function CoursePage() {
                     <LectureViewer
                         username=""
                         courseName={courseName}
-                        lecture={selectedLecture || { title: courseData?.title || 'Lecture Title', videoUrl: 'https://youtu.be/hKm_rh1RTJQ' }}
+                        lecture={selectedLecture || { title: courseData?.title || 'Lecture Title', videoUrl: 'https://youtu.be/tTrVlQfP11M' }}
                     />
                 </div>
             </div>
