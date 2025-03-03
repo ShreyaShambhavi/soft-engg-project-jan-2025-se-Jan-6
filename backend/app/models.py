@@ -221,3 +221,24 @@ class Messages(db.Model):
             'message': self.message,
             'timestamp': self.timestamp.isoformat() if self.timestamp else None  # Convert datetime to ISO format
         }
+
+class Notes(db.Model):
+    id = db.Column(db.Integer(), primary_key = True)
+    userId = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE')) #Added ondelete
+    courseId = db.Column(db.Integer(), db.ForeignKey('courses.id', ondelete='CASCADE')) #Added ondelete
+    title = db.Column(db.String(), nullable = False)
+    content = db.Column(db.String(), nullable = False)
+    timestamp = db.Column(db.DateTime(), nullable = False, default = datetime.datetime.now)
+
+    def __repr__(self): # Useful for debugging
+        return f'<Note user_id={self.userId}, course_id={self.courseId}, title={self.title}, timestamp={self.timestamp}>'
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'userId': self.userId,
+            'courseId': self.courseId,
+            'title': self.title,
+            'content': self.content,
+            'timestamp': self.timestamp.isoformat() if self.timestamp else None  # Convert datetime to ISO format
+        }

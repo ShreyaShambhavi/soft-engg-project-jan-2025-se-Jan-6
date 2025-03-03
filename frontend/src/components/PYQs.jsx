@@ -6,11 +6,8 @@ import { Home, Calendar, Users, Download, BookOpen, Eye } from 'lucide-react';
 
 
 const PYQs = () => {
-  const [selectedMonth, setSelectedMonth] = useState(0);
-  const [selectedOptions, setSelectedOptions] = useState({1: 0, 2: 0, 3: 0});
-  const [activeIcon, setActiveIcon] = useState('Books');
-  const [viewMode, setViewMode] = useState('questions'); // 'questions' or 'pdf'
-  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedMonth, setSelectedMonth] = useState(0)
+  const [viewMode, setViewMode] = useState('pdf');
 
   const months = [
     'January 2023',
@@ -24,24 +21,6 @@ const PYQs = () => {
     'September 2023': '/pyqs/September-2023.pdf',
     'May 2023': '/pyqs/May-2023.pdf',
   };
-
-  const questions = [
-    {
-      id: 1,
-      text: 'Which of the following has the worst time complexity ?',
-      options: ['Option 1', 'Option 2', 'Option 3', 'Option 4']
-    },
-    {
-      id: 2,
-      text: 'Question 2',
-      options: ['Option 1', 'Option 2', 'Option 3', 'Option 4']
-    },
-    {
-      id: 3,
-      text: 'Question 3',
-      options: ['Option 1', 'Option 2', 'Option 3', 'Option 4']
-    }
-  ];
 
   const handleOptionSelect = (questionId, optionIndex) => {
     setSelectedOptions(prev => ({
@@ -116,14 +95,6 @@ const PYQs = () => {
         {/* Content Sidebar */}
         <div className="w-64 border-r min-h-screen p-4">
           <h2 className="text-2xl font-bold mb-4">PYQs</h2>
-          
-          {/* Navigation Tabs */}
-          <div className="flex flex-wrap gap-2 mb-4 text-sm">
-            <button className="px-3 py-1 rounded border hover:bg-gray-50">Content</button>
-            <button className="px-3 py-1 rounded border hover:bg-gray-50">Quizzes</button>
-            <button className="px-3 py-1 rounded border bg-red-50 text-red-600 border-red-200">End Term</button>
-            <button className="px-3 py-1 rounded border hover:bg-gray-50">OPEs</button>
-          </div>
 
           {/* Month List */}
           <div className="space-y-2">
@@ -140,30 +111,7 @@ const PYQs = () => {
             ))}
           </div>
           
-          {/* View mode options */}
-          <div className="mt-8">
-            <h3 className="text-sm font-semibold uppercase text-gray-500 mb-2">View Options</h3>
-            <div className="flex flex-col gap-2">
-              <button 
-                onClick={() => setViewMode('questions')}
-                className={`flex items-center gap-2 p-2 rounded ${
-                  viewMode === 'questions' ? 'bg-red-50 text-red-600' : 'hover:bg-gray-50'
-                }`}
-              >
-                <BookOpen size={18} />
-                <span>Questions View</span>
-              </button>
-              <button 
-                onClick={() => setViewMode('pdf')}
-                className={`flex items-center gap-2 p-2 rounded ${
-                  viewMode === 'pdf' ? 'bg-red-50 text-red-600' : 'hover:bg-gray-50'
-                }`}
-              >
-                <Eye size={18} />
-                <span>PDF View</span>
-              </button>
-            </div>
-          </div>
+          
         </div>
 
         {/* Content Area */}
@@ -173,59 +121,8 @@ const PYQs = () => {
               <div className="text-sm text-gray-500">Previous Year Questions / Software Testing</div>
               <h1 className="text-xl font-bold">End Term - {months[selectedMonth]}</h1>
             </div>
-            <div className="flex items-center space-x-2">
-              <button className="text-gray-400 hover:text-gray-600 p-2">✕</button>
-            </div>
-          </div>
-
-          {viewMode === 'questions' ? (
-            /* Questions View */
-            <>
-              <div className="text-sm text-gray-500 mb-6">Total Number Of Questions: {questions.length}</div>
-              <div className="space-y-8">
-                {questions.map((question, qIndex) => (
-                  <div key={question.id} className="space-y-4">
-                    <div className="font-medium">
-                      {qIndex + 1}. {question.text}
-                    </div>
-                    <div className="space-y-2">
-                      {question.options.map((option, oIndex) => (
-                        <div 
-                          key={oIndex} 
-                          className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
-                          onClick={() => handleOptionSelect(question.id, oIndex)}
-                        >
-                          <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                            oIndex === selectedOptions[question.id] ? 'border-red-600' : 'border-gray-300'
-                          }`}>
-                            {oIndex === selectedOptions[question.id] && (
-                              <div className="w-2 h-2 rounded-full bg-red-600" />
-                            )}
-                          </div>
-                          <span>{option}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            /* PDF View using iframe */
-            <div className="flex flex-col items-center">
-              <div className="border rounded-lg shadow-sm overflow-hidden mb-4" style={{ width: '100%', height: '75vh' }}>
-                <iframe 
-                  src={getPdfUrl(months[selectedMonth])}
-                  title={`Software Testing PYQ - ${months[selectedMonth]}`}
-                  className="w-full h-full"
-                  onError={(e) => {
-                    console.error("PDF loading error:", e);
-                  }}
-                />
-              </div>
-              
-              <div className="w-full flex justify-center mb-8">
-                <div className="flex items-center gap-4">
+            <div className="flex justify-center items-center">
+                <div className="flex justify-center items-center gap-4">
                   <button 
                     onClick={handleDownloadPdf}
                     className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
@@ -241,7 +138,26 @@ const PYQs = () => {
                     <Eye size={18} /> Open in New Tab
                   </a>
                 </div>
+            </div>
+          </div>
+
+          {viewMode === 'questions' ? (
+            <></>
+          ) : (
+            /* PDF View using iframe */
+            <div className="flex flex-col items-center">
+              <div className="border rounded-lg shadow-sm overflow-hidden mb-4" style={{ width: '100%', height: '75vh' }}>
+                <iframe 
+                  src={getPdfUrl(months[selectedMonth])}
+                  title={`Software Testing PYQ - ${months[selectedMonth]}`}
+                  className="w-full h-full"
+                  onError={(e) => {
+                    console.error("PDF loading error:", e);
+                  }}
+                />
               </div>
+              
+              
             </div>
           )}
         </div>
