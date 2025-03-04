@@ -1,10 +1,11 @@
 from flask import Blueprint, jsonify, request, current_app, session, make_response
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.models import User, Role, UserRoles, Courses, db, Notes
+from app.models import User, Role, UserRoles, Courses, db, Notes, Messages, Chatroom
 from datetime import datetime
 import logging
 from flask_cors import cross_origin
+import uuid
 
 auth = Blueprint('auth', __name__, url_prefix='/api')
 logger = logging.getLogger(__name__) # Initialize a logger
@@ -280,3 +281,254 @@ def delete_note(note_id):
     db.session.delete(note)
     db.session.commit()
     return jsonify({'message': 'Note deleted successfully'}), 200
+
+# ------- CHATROOM API ENDPOINTS --------
+
+@auth.route('/v1/chatrooms', methods=['GET'])
+@login_required
+@cross_origin(origins="http://localhost:5173", supports_credentials=True)
+def get_user_chatrooms():
+    """Get all chatrooms for the current user"""
+    # Find all courses the user is enrolled in
+    user_courses = current_user.courses
+    
+    chatrooms = []
+    for course in user_courses:
+        # Find or create chatroom for this course
+        chat = Chatroom.query.filter_by(userId=current_user.id, courseId=course.id).first()
+        if not chat:
+            chat = Chatroom(userId=current_user.id, courseId=course.id)
+            db.session.add(chat)
+            db.session.commit()
+        
+        # Get the last message for preview
+        last_message = Messages.query.filter_by(chatroomId=chat.id).order_by(Messages.timestamp.desc()).first()
+        
+        chatrooms.append({
+            'id': chat.id,
+            'courseId': course.id,
+            'courseName': course.name,
+            'lastMessage': last_message.message if last_message else None,
+            'lastMessageTime': last_message.timestamp.isoformat() if last_message else None
+        })
+    
+    return jsonify({'chatrooms': chatrooms})
+
+@auth.route('/v1/chatrooms/<int:course_id>', methods=['GET'])
+@login_required
+@cross_origin(origins="http://localhost:5173", supports_credentials=True)
+def get_course_chatroom(course_id):
+    """Get or create a chatroom for a specific course"""
+    # Check if course exists and user is enrolled
+    course = Courses.query.get(course_id)
+    if not course or course not in current_user.courses:
+        return jsonify({'message': 'Course not found or not enrolled'}), 404
+    
+    # Find or create chatroom
+    chatroom = Chatroom.query.filter_by(userId=current_user.id, courseId=course_id).first()
+    if not chatroom:
+        chatroom = Chatroom(userId=current_user.id, courseId=course_id)
+        db.session.add(chatroom)
+        db.session.commit()
+    
+    # Get all participants in this course's chatrooms
+    participants = User.query.join(Chatroom).filter(Chatroom.courseId == course_id).all()
+    participant_count = len(participants)
+    
+    # Get basic participant info
+    participants_info = [{
+        'id': user.id,
+        'username': user.username,
+        'roles': [role.name for role in user.roles]
+    } for user in participants[:10]]  # Limit to first 10 for preview
+    
+    return jsonify({
+        'chatroom': chatroom.to_dict(),
+        'course': course.to_dict(),
+        'participantCount': participant_count,
+        'participants': participants_info
+    })
+
+@auth.route('/v1/messages/<int:chatroom_id>', methods=['GET'])
+@login_required
+@cross_origin(origins="http://localhost:5173", supports_credentials=True)
+def get_chatroom_messages(chatroom_id):
+    """Get all messages for a specific chatroom"""
+    # Verify chatroom exists and belongs to current user
+    chatroom = Chatroom.query.get(chatroom_id)
+    if not chatroom:
+        return jsonify({'message': 'Chatroom not found'}), 404
+    
+    # Get course chatroom (could be group chat for a course)
+    course_id = chatroom.courseId
+    
+    # Get all messages for this course (across all users)
+    course_chatrooms = Chatroom.query.filter_by(courseId=course_id).all()
+    chatroom_ids = [chat.id for chat in course_chatrooms]
+    
+    messages = Messages.query.filter(Messages.chatroomId.in_(chatroom_ids)).order_by(Messages.timestamp).all()
+    
+    # Include user details with each message
+    messages_with_user = []
+    for message in messages:
+        user = User.query.get(message.userId)
+        messages_with_user.append({
+            'id': message.id,
+            'message': message.message,
+            'timestamp': message.timestamp.isoformat(),
+            'edited': getattr(message, 'edited', False),  # Handle if edited column doesn't exist yet
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'isCurrentUser': user.id == current_user.id
+            }
+        })
+    
+    return jsonify({'messages': messages_with_user})
+
+@auth.route('/v1/messages', methods=['POST'])
+@login_required
+@cross_origin(origins="http://localhost:5173", supports_credentials=True)
+def send_message():
+    """Send a new message"""
+    data = request.get_json()
+    if not data or 'courseId' not in data or 'message' not in data:
+        return jsonify({'message': 'Missing course ID or message content'}), 400
+    
+    course_id = data['courseId']
+    message_content = data['message']
+    
+    # Verify course exists and user is enrolled
+    course = Courses.query.get(course_id)
+    if not course or course not in current_user.courses:
+        return jsonify({'message': 'Course not found or not enrolled'}), 404
+    
+    # Find or create chatroom
+    chatroom = Chatroom.query.filter_by(userId=current_user.id, courseId=course_id).first()
+    if not chatroom:
+        chatroom = Chatroom(userId=current_user.id, courseId=course_id)
+        db.session.add(chatroom)
+        db.session.commit()
+    
+    # Create and save message
+    new_message = Messages(
+        chatroomId=chatroom.id,
+        userId=current_user.id,
+        message=message_content,
+        timestamp=datetime.now()
+    )
+    
+    # Set edited field if it exists in the model
+    if hasattr(new_message, 'edited'):
+        new_message.edited = False
+        
+    db.session.add(new_message)
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Message sent successfully',
+        'messageData': {
+            'id': new_message.id,
+            'message': new_message.message,
+            'timestamp': new_message.timestamp.isoformat(),
+            'edited': getattr(new_message, 'edited', False),
+            'user': {
+                'id': current_user.id,
+                'username': current_user.username,
+                'isCurrentUser': True
+            }
+        }
+    }), 201
+
+@auth.route('/v1/course-members/<int:course_id>', methods=['GET'])
+@login_required
+@cross_origin(origins="http://localhost:5173", supports_credentials=True)
+def get_course_members(course_id):
+    """Get all members of a course"""
+    # Verify course exists
+    course = Courses.query.get(course_id)
+    if not course:
+        return jsonify({'message': 'Course not found'}), 404
+    
+    # Get all users enrolled in this course
+    members = course.students
+    
+    members_info = []
+    for member in members:
+        members_info.append({
+            'id': member.id,
+            'username': member.username,
+            'email': member.email,
+            'roles': [role.name for role in member.roles],
+            'isCurrentUser': member.id == current_user.id
+        })
+    
+    return jsonify({'members': members_info})
+
+@auth.route('/v1/messages/<int:message_id>', methods=['PUT'])
+@login_required
+@cross_origin(origins="http://localhost:5173", supports_credentials=True)
+def edit_message(message_id):
+    """Edit a message"""
+    # Verify message exists and belongs to current user
+    message = Messages.query.get(message_id)
+    if not message:
+        return jsonify({'message': 'Message not found'}), 404
+    
+    # Only the owner can edit their message
+    if message.userId != current_user.id:
+        return jsonify({'message': 'You are not authorized to edit this message'}), 403
+    
+    data = request.get_json()
+    if not data or 'message' not in data:
+        return jsonify({'message': 'Missing message content'}), 400
+    
+    # Update message content
+    message.message = data['message']
+    
+    # If the Messages model has an 'edited' field
+    if hasattr(message, 'edited'):
+        message.edited = True
+        
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Message updated successfully',
+        'messageData': {
+            'id': message.id,
+            'message': message.message,
+            'timestamp': message.timestamp.isoformat(),
+            'edited': getattr(message, 'edited', True),  # Default to True even if column doesn't exist yet
+            'user': {
+                'id': current_user.id,
+                'username': current_user.username,
+                'isCurrentUser': True
+            }
+        }
+    })
+
+@auth.route('/v1/messages/<int:message_id>', methods=['DELETE'])
+@login_required
+@cross_origin(origins="http://localhost:5173", supports_credentials=True)
+def delete_message(message_id):
+    """Delete a message"""
+    # Verify message exists and belongs to current user
+    message = Messages.query.get(message_id)
+    if not message:
+        return jsonify({'message': 'Message not found'}), 404
+    
+    # Only the owner can delete their message
+    if message.userId != current_user.id:
+        return jsonify({'message': 'You are not authorized to delete this message'}), 403
+    
+    # Delete the message
+    db.session.delete(message)
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Message deleted successfully',
+        'messageId': message_id
+    })
+
+
+

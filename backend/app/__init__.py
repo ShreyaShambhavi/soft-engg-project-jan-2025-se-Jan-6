@@ -44,6 +44,7 @@ def create_app():
     from app.api.auth import auth
     app.register_blueprint(auth, url_prefix='/api')
 
+
     # Call create_database after initializing the app and extensions
     create_database(app)
     CORS(app, supports_credentials=True, origins="http://localhost:5173")
