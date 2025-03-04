@@ -1,16 +1,29 @@
 import { useParams } from 'react-router-dom';
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, Search, Bell, BookOpen, Calendar, Users2, FileText, Download, BookCopy, LayoutDashboard, FolderDown, FileQuestion, NotebookPen, Bot, MessagesSquare } from 'lucide-react';
+import { Home, Search, Bell, BookOpen, Calendar, Users2, FileText, Download, BookCopy, LayoutDashboard, FolderDown, FileQuestion, NotebookPen, Bot, MessagesSquare, ChevronDown, ChevronRight } from 'lucide-react';
 import CourseChatBotMini from './CourseChatBotMini';
-import LectureViewer from './LectureViewer'; // Import the LectureViewer component
+import LectureViewer from './LectureViewer';
+import AssignmentViewer from './AssignmentViewer';
 
 function CoursePage() {
     const { courseName } = useParams();
-    const [expandedSections, setExpandedSections] = useState({});
-    const [selectedLecture, setSelectedLecture] = useState(null);
+    const [expandedSections, setExpandedSections] = useState({
+        week1: false,
+        week2: false,
+        week3: false,
+        week4: false,
+        week5: false,
+        week6: false,
+        week7: false,
+        week8: false,
+        week9: false,
+        week10: false,
+        week11: false,
+        week12: false
+    });
+    const [selectedContent, setSelectedContent] = useState(null);
     const [showChatbot, setShowChatbot] = useState(false);
     const [minimizedChatbot, setMinimizedChatbot] = useState(false);
-    const [activeLectureTab, setActiveLectureTab] = useState('Lecture Overview');
     const [courseData, setCourseData] = useState(null);
 
     const [chatbotSize, setChatbotSize] = useState({ width: 380, height: 450 });
@@ -22,56 +35,6 @@ function CoursePage() {
     useEffect(() => {
         fetchCourseData();
     }, [courseName]);
-
-    useEffect(() => {
-        if (!isResizing) return;
-
-        const handleMouseMove = (e) => {
-            const deltaX = e.clientX - resizeStartPosRef.current.x;
-            const deltaY = e.clientY - resizeStartPosRef.current.y;
-
-            setChatbotSize({
-                width: Math.max(300, initialSizeRef.current.width + deltaX),
-                height: Math.max(300, initialSizeRef.current.height + deltaY),
-            });
-        };
-
-        const handleMouseUp = () => {
-            setIsResizing(false);
-            document.body.style.cursor = 'default';
-            document.body.style.userSelect = 'auto';
-        };
-
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-
-        document.body.style.cursor = 'se-resize';
-        document.body.style.userSelect = 'none';
-
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-            document.body.style.cursor = 'default';
-            document.body.style.userSelect = 'auto';
-        };
-    }, [isResizing]);
-
-    const handleStartResize = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        resizeStartPosRef.current = {
-            x: e.clientX,
-            y: e.clientY
-        };
-
-        initialSizeRef.current = {
-            width: chatbotSize.width,
-            height: chatbotSize.height
-        };
-
-        setIsResizing(true);
-    };
 
     const fetchCourseData = async () => {
         try {
@@ -93,14 +56,53 @@ function CoursePage() {
         }));
     };
 
-    const renderStatus = (status) => {
-        if (status === 'completed') {
-            return <div className="w-4 h-4 rounded-full bg-green-500"></div>;
-        } else if (status === 'in-progress') {
-            return <div className="w-4 h-4 rounded-full bg-yellow-500"></div>;
-        }
-        return <div className="w-4 h-4 rounded-full bg-gray-300"></div>;
+    const handleContentClick = (content) => {
+        setSelectedContent(content);
     };
+
+    const weeksContent = [
+        {
+            number: 1,
+            lectures: [
+                { 
+                    type: 'lecture',
+                    title: 'Lecture 1: Some Popular Errors #1: Ariane 5', 
+                    videoUrl: 'https://youtu.be/tTrVlQfP11M',
+                    description: 'Software Testing Motivation' 
+                },
+                { type: 'lecture', title: 'Lecture 2', videoUrl: '' },
+                { type: 'lecture', title: 'Lecture 3', videoUrl: '' },
+                { type: 'lecture', title: 'Lecture 4', videoUrl: '' },
+                { 
+                    type: 'lecture', 
+                    title: 'Lecture 5', 
+                    videoUrl: '' 
+                },
+                {
+                    type: 'assignment',
+                    title: 'Graded Assignment 1',
+                    subtitle: 'Assignment',
+                    dueDate: '2025-01-26, 23:59 IST',
+                    lastSubmitted: '2025-01-26, 20:23 IST',
+                    questions: [
+                        {
+                            text: 'Software can be divided into manageable components.',
+                            points: 1,
+                            options: [
+                                'It is a way of breaking the complexity of the system into manageable parts.',
+                                'It enables different teams to work on different components.',
+                                'Everyone on the development team must know how to work with all the components.',
+                                'It conceals implementation details while providing an interface for others to display its capabilities.'
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        // Add more weeks as needed
+    ];
+
+    
 
     const sidebarIcons = [
         { icon: <Home />, label: "Home", url: "/" },
@@ -115,11 +117,12 @@ function CoursePage() {
 
     const weeks = Array.from({ length: 12 }, (_, i) => ({
         number: i + 1,
-        status: i < 4 ? 'completed' : i === 4 ? 'in-progress' : 'pending'
+        
     }));
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
+            {/* Sidebar Icons */}
             <div className="w-16 bg-white border-r flex flex-col items-center py-4 space-y-8">
                 {sidebarIcons.map((item, index) => (
                     <div
@@ -137,6 +140,7 @@ function CoursePage() {
                 ))}
             </div>
 
+            {/* Weeks Sidebar */}
             <div className="w-64 bg-white border-r">
                 <div className="p-4">
                     <div className="h-8">
@@ -146,22 +150,46 @@ function CoursePage() {
                 </div>
 
                 <div className="border-t">
-                    <div className="py-2">
-                        {weeks.map((week) => (
+                    {weeks.map((week) => (
+                        <div key={week.number} className="border-b">
                             <button
-                                key={week.number}
                                 onClick={() => toggleSection(`week${week.number}`)}
                                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50"
                             >
                                 <span className="text-gray-700">Week {week.number}</span>
-                                {renderStatus(week.status)}
+                                <div className="flex items-center space-x-2">
+                                    
+                                    {expandedSections[`week${week.number}`] ? 
+                                        <ChevronDown className="w-4 h-4 text-gray-500" /> : 
+                                        <ChevronRight className="w-4 h-4 text-gray-500" />
+                                    }
+                                </div>
                             </button>
-                        ))}
-                    </div>
+
+                            {expandedSections[`week${week.number}`] && (
+                                <div className="px-4 py-2 space-y-2">
+                                    {weeksContent.find(w => w.number === week.number)?.lectures.map((content, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={() => handleContentClick(content)}
+                                            className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded flex items-center justify-between"
+                                        >
+                                            <span>{content.title}</span>
+                                            {content.type === 'assignment' && (
+                                                <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">Assignment</span>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ))}
                 </div>
             </div>
 
+            {/* Main Content Area */}
             <div className="flex-1">
+                {/* Header */}
                 <header className="bg-white border-b px-6 py-3 flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                         <Search className="w-5 h-5 text-gray-400" />
@@ -175,16 +203,31 @@ function CoursePage() {
                     </div>
                 </header>
 
+                {/* Content Viewer */}
                 <div className="p-6">
-                    {/* Use LectureViewer component here */}
-                    <LectureViewer
-                        username=""
-                        courseName={courseName}
-                        lecture={selectedLecture || { title: courseData?.title || 'Lecture Title', videoUrl: 'https://youtu.be/tTrVlQfP11M' }}
-                    />
+                    {selectedContent?.type === 'lecture' ? (
+                        <LectureViewer
+                            username=""
+                            courseName={courseName}
+                            lecture={selectedContent || { 
+                                title: 'Lecture 1: Some Popular Errors #1: Ariane 5', 
+                                videoUrl: 'https://youtu.be/tTrVlQfP11M',
+                                description: 'Software Testing Motivation' 
+                            }}
+                        />
+                    ) : selectedContent?.type === 'assignment' ? (
+                        <AssignmentViewer
+                            assignment={selectedContent}
+                        />
+                    ) : (
+                        <div className="text-center text-lg font-semibold text-gray-700">
+                            Welcome to {courseName}!
+                        </div>
+                    )}
                 </div>
             </div>
 
+            {/* Chatbot Component */}
             <div className="fixed bottom-4 right-4 z-50">
                 <button
                     onClick={() => {
@@ -196,6 +239,9 @@ function CoursePage() {
                     <span>AI Chatbot</span>
                 </button>
             </div>
+
+            
+            {/* Chatbot component  */}
 
             {showChatbot && (
                 <div

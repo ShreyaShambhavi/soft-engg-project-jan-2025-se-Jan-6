@@ -8,6 +8,7 @@ import Dashboard from './components/Dashboard';
 import Courses from './components/Courses';
 import CoursePage from './components/CoursePage';
 import LectureViewer from './components/LectureViewer';
+import AssignmentViewer from './components/AssignmentViewer';
 import Assignment from './components/Assignment';
 import ChatRoom from './components/ChatRoom';
 import Announcements from './components/Announcements';
@@ -29,6 +30,7 @@ function App() {
       <Route path="/courses" element={<PrivateRoute element={Courses} />} />
       <Route path="/courses/:courseName" element={<PrivateRoute element={CoursePage} />} />
       <Route path="/lectureviewer" element={<PrivateRoute element={LectureViewer} />} />
+      <Route path="/assignmentviewer" element={<PrivateRoute element={AssignmentViewer} />} />
       <Route path="/assignment" element={<PrivateRoute element={Assignment} />} />
       <Route path="/chatroom/:courseChatRoom" element={<PrivateRoute element={ChatRoom} />} />
       <Route path="/announcements" element={<PrivateRoute element={Announcements} />} />
