@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app, session, make_response
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.models import User, Role, UserRoles, Courses, db
+from app.models import User, Role, UserRoles, Courses, db, Notes
 from datetime import datetime
 import logging
 from flask_cors import cross_origin
@@ -86,7 +86,7 @@ def logout():
     response = jsonify({"message": "Logged out successfully"})
     response.set_cookie('remember_token', '', expires=0)  # Expire remember_token
     return response
-   
+    
 @auth.route('/v1/user', methods=['GET'])
 @login_required
 def get_user():
@@ -195,3 +195,88 @@ def get_available_courses():
     available_courses = all_courses - user_courses
     available_courses_list = [Courses.query.filter_by(name=course).first().to_dict() for course in available_courses]
     return jsonify({'courses': available_courses_list})
+
+
+#Notes routes below and needs some fixing
+
+@auth.route('/v1/notes', methods=['POST'])
+@login_required
+def create_note():
+    data = request.get_json()
+    if not data or 'title' not in data or 'content' not in data or 'courseId' not in data:
+        return jsonify({'message': 'Missing title, content, or courseId'}), 400
+
+    course = Courses.query.get(data['courseId'])
+    if not course:
+        return jsonify({'message': 'Course not found'}), 404
+
+    new_note = Notes(
+        userId=current_user.id, 
+        courseId=data['courseId'], 
+        title=data['title'], 
+        content=data['content']
+    )
+    
+    db.session.add(new_note)
+    db.session.commit()
+
+    return jsonify({'message': 'Note created successfully', 'note': new_note.to_dict()}), 201
+
+@auth.route('/v1/notes', methods=['GET'])
+@login_required
+def get_user_notes():
+    # Optional query parameters for filtering
+    course_id = request.args.get('courseId', type=int)
+    
+    query = Notes.query.filter_by(userId=current_user.id)
+    
+    if course_id:
+        query = query.filter_by(courseId=course_id)
+    
+    notes = query.order_by(Notes.timestamp.desc()).all()
+    return jsonify({'notes': [note.to_dict() for note in notes]}), 200
+
+@auth.route('/v1/notes/<int:note_id>', methods=['GET'])
+@login_required
+def get_note_details(note_id):
+    note = Notes.query.filter_by(id=note_id, userId=current_user.id).first()
+    if not note:
+        return jsonify({'message': 'Note not found'}), 404
+    
+    return jsonify({'note': note.to_dict()}), 200
+
+@auth.route('/v1/notes/<int:note_id>', methods=['PUT'])
+@login_required
+def update_note(note_id):
+    note = Notes.query.filter_by(id=note_id, userId=current_user.id).first()
+    if not note:
+        return jsonify({'message': 'Note not found'}), 404
+
+    data = request.get_json()
+    if not data:
+        return jsonify({'message': 'No update data provided'}), 400
+
+    # Update fields that are provided
+    if 'title' in data:
+        note.title = data['title']
+    if 'content' in data:
+        note.content = data['content']
+    if 'courseId' in data:
+        course = Courses.query.get(data['courseId'])
+        if not course:
+            return jsonify({'message': 'Course not found'}), 404
+        note.courseId = data['courseId']
+
+    db.session.commit()
+    return jsonify({'message': 'Note updated successfully', 'note': note.to_dict()}), 200
+
+@auth.route('/v1/notes/<int:note_id>', methods=['DELETE'])
+@login_required
+def delete_note(note_id):
+    note = Notes.query.filter_by(id=note_id, userId=current_user.id).first()
+    if not note:
+        return jsonify({'message': 'Note not found'}), 404
+
+    db.session.delete(note)
+    db.session.commit()
+    return jsonify({'message': 'Note deleted successfully'}), 200

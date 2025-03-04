@@ -224,13 +224,15 @@ class Messages(db.Model):
 
 class Notes(db.Model):
     id = db.Column(db.Integer(), primary_key = True)
-    userId = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE')) #Added ondelete
-    courseId = db.Column(db.Integer(), db.ForeignKey('courses.id', ondelete='CASCADE')) #Added ondelete
-    title = db.Column(db.String(), nullable = False)
-    content = db.Column(db.String(), nullable = False)
+    userId = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
+    courseId = db.Column(db.Integer(), db.ForeignKey('courses.id', ondelete='CASCADE'))
+    title = db.Column(db.String(255), nullable = False)
+    content = db.Column(db.Text(), nullable = False)
     timestamp = db.Column(db.DateTime(), nullable = False, default = datetime.datetime.now)
+    user = db.relationship('User', backref=db.backref('notes', lazy=True))
+    course = db.relationship('Courses', backref=db.backref('notes', lazy=True))
 
-    def __repr__(self): # Useful for debugging
+    def __repr__(self): 
         return f'<Note user_id={self.userId}, course_id={self.courseId}, title={self.title}, timestamp={self.timestamp}>'
 
     def to_dict(self):
@@ -240,5 +242,5 @@ class Notes(db.Model):
             'courseId': self.courseId,
             'title': self.title,
             'content': self.content,
-            'timestamp': self.timestamp.isoformat() if self.timestamp else None  # Convert datetime to ISO format
+            'timestamp': self.timestamp.isoformat() if self.timestamp else None
         }
