@@ -47,7 +47,21 @@ def create_app():
 
     # Call create_database after initializing the app and extensions
     create_database(app)
-    CORS(app, supports_credentials=True, origins="http://localhost:5173")
+    
+    # Configure CORS to allow requests from Swagger UI and your frontend
+    CORS(app, 
+         resources={r"/api/*": {
+             "origins": [
+                 "http://localhost:5173",  # Vite frontend
+                 "http://localhost:5000",  # Flask backend
+                 "http://localhost",       # Basic localhost
+                 "http://localhost:8080",  # Common Swagger UI port
+                 "https://editor.swagger.io",  # Online Swagger editor
+                 "https://editor-next.swagger.io",  # Online Swagger editor
+             ],
+             "supports_credentials": True
+         }},
+         supports_credentials=True)
 
     return app
 

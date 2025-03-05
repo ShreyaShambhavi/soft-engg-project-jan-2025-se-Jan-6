@@ -6,6 +6,8 @@ class Config: #all the same setting from init.py
     SESSION_COOKIE_SECURE = True  # Ensures cookies work over HTTP
     SESSION_COOKIE_HTTPONLY = True  # Security best practice
     SESSION_COOKIE_SAMESITE = 'None'  # Prevents CSRF issues
-    REMEMBER_COOKIE_SAMSITE = 'None'
+    REMEMBER_COOKIE_SAMESITE = 'None'
     REMEMBER_COOKIE_DURATION = 3600  # Keeps session for 1 hour
     REMEMBER_COOKIE_SECURE = 'True'
+    SESSION_COOKIE_NAME = 'session'
+    REMEMBER_COOKIE_NAME = 'remember_token'

@@ -11,7 +11,7 @@ auth = Blueprint('auth', __name__, url_prefix='/api')
 logger = logging.getLogger(__name__) # Initialize a logger
 
 @auth.route('/v1/signup/', methods=['POST'])
-@cross_origin(origins="http://localhost:5173", supports_credentials=True)
+@cross_origin(origins=["http://localhost:5173","http://localhost:5000", "http://localhost:8080","https://editor.swagger.io","https://editor-next.swagger.io"], supports_credentials=True)
 def signup():
     data = request.get_json()
     if not data or 'email' not in data or 'password' not in data or 'username' not in data or 'role' not in data or 'courses' not in data:
@@ -50,7 +50,7 @@ def signup():
     return jsonify({'message': 'User created successfully', 'user': new_user.to_dict()}), 201
 
 @auth.route('/v1/login/', methods=['POST'])
-@cross_origin(origins="http://localhost:5173", supports_credentials=True)
+@cross_origin(origins=["http://localhost:5173", "http://localhost:5000", "http://localhost:8080","https://editor.swagger.io","https://editor-next.swagger.io"], supports_credentials=True)
 def login():
     logger.debug("Login route called")
     data = request.get_json()
@@ -62,11 +62,35 @@ def login():
         logger.debug(f"User {user.email} authenticated successfully")
         login_user(user, remember=True)  # Ensures session persists
 
+        # Create response
         response = make_response(jsonify({'message': 'Logged in successfully', 'user': user.to_dict()}), 200)
-        response.headers['Cache-Control'] = 'no-store'  # Prevent caching issues
+        response.headers['Cache-Control'] = 'no-store'
+        
+        # Manually set cookie for cross-origin requests
+        session_cookie = request.cookies.get('session')
+        if session_cookie:
+            logger.debug(f"Setting session cookie: {session_cookie[:10]}...")
+            response.headers['Set-Cookie'] = f'session={session_cookie}; Path=/; HttpOnly; SameSite=None; Secure'
+        
         return response
 
     return jsonify({'message': 'Invalid credentials'}), 401
+
+@auth.route('/v1/check-auth', methods=['GET'])
+@login_required
+@cross_origin(origins=["http://localhost:5173", "http://localhost:5000", "http://localhost",
+                        "https://editor.swagger.io", "https://editor-next.swagger.io"], supports_credentials=True)
+def check_auth():
+    """
+    Check if the user is authenticated.
+    Returns user details if authenticated.
+    """
+    return jsonify({
+        "message": "User is authenticated",
+        "user": current_user.to_dict()
+    }), 200
+
+
 
 @auth.route('/v1/logout/', methods=['POST'])
 @login_required
