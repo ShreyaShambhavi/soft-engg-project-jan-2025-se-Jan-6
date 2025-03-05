@@ -1,8 +1,11 @@
 from app import create_app
 from together import Together
 from flask import request, jsonify
+# from flask_cors import CORS
 
 app = create_app()
+
+# CORS(app)
 
 TOGETHER_API_KEY = "e4496792b64a18f405d6f2ff88543aaa95b6e348d688c01e9ec8133a77b68476"
 client = Together(api_key=TOGETHER_API_KEY)
