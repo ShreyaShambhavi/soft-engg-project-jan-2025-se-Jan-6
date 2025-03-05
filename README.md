@@ -11,16 +11,41 @@ This is a React-based frontend application designed to work with a Flask backend
 
 ## Installation
 
-### Prerequisites
-Ensure you have the following installed:
-- [Node.js](https://nodejs.org/)
-- [npm](https://www.npmjs.com/) 
+
 
 ### Clone the Repository
 ```sh
 git clone git@github.com:ShreyaShambhavi/soft-engg-project-jan-2025-se-Jan-6.git
 cd soft-engg-project-jan-2025-se-Jan-6
 ```
+
+## Backend:
+
+### Create a virtual environment:
+```
+python -m venv .venv
+```
+
+### Activate the venv:
+```
+.\venv\Scripts\activate
+```
+
+### cd into the backend directory
+
+### Run the backend file:
+```
+python run.py
+```
+
+## Frontend:
+
+### Prerequisites
+Ensure you have the following installed:
+- [Node.js](https://nodejs.org/)
+- [npm](https://www.npmjs.com/) 
+
+### cd into the frontend directory
 
 ### Install Dependencies
 ```sh
