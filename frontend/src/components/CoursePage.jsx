@@ -66,35 +66,94 @@ function CoursePage() {
             lectures: [
                 { 
                     type: 'lecture',
-                    title: 'Lecture 1: Some Popular Errors #1: Ariane 5', 
+                    title: '1.1 Software Testing: Motivation', 
                     videoUrl: 'https://youtu.be/tTrVlQfP11M',
-                    description: 'Software Testing Motivation' 
+                    description: 'Software Testing: Motivation' 
                 },
-                { type: 'lecture', title: 'Lecture 2', videoUrl: '' },
-                { type: 'lecture', title: 'Lecture 3', videoUrl: '' },
-                { type: 'lecture', title: 'Lecture 4', videoUrl: '' },
                 { 
-                    type: 'lecture', 
-                    title: 'Lecture 5', 
-                    videoUrl: '' 
+                    type: 'lecture',
+                    title: '1.2 Software Development Life Cycle', 
+                    videoUrl: 'https://youtu.be/79jPbpxndSw',
+                    description: 'Software Development Life Cycle' 
+                },
+                { 
+                    type: 'lecture',
+                    title: '1.3 Software Testing: Terminologies', 
+                    videoUrl: 'https://youtu.be/FpApclVsLrw',
+                    description: 'Software Testing: Terminologies' 
+                },
+                { 
+                    type: 'lecture',
+                    title: '1.4 Software Testing: Terminologies and Processes', 
+                    videoUrl: 'https://youtu.be/eYkSXT89Gi8',
+                    description: 'Software Testing: Terminologies and Processes' 
+                },
+                { 
+                    type: 'lecture',
+                    title: '1.5 Software Test Automation: JUnit as an example', 
+                    videoUrl: 'https://youtu.be/ZgZ0kpyED9k',
+                    description: 'Software Test Automation: JUnit as an example' 
                 },
                 {
                     type: 'assignment',
                     title: 'Graded Assignment 1',
                     subtitle: 'Assignment',
                     dueDate: '2025-01-26, 23:59 IST',
-                    lastSubmitted: '2025-01-26, 20:23 IST',
+                    lastSubmitted: '',
                     questions: [
                         {
-                            text: 'Software can be divided into manageable components.',
+                            text: '1) Select the statements that are true with respect to software errors.',
                             points: 1,
                             options: [
-                                'It is a way of breaking the complexity of the system into manageable parts.',
-                                'It enables different teams to work on different components.',
-                                'Everyone on the development team must know how to work with all the components.',
-                                'It conceals implementation details while providing an interface for others to display its capabilities.'
+                                'If a software system that needs to be run continuously, encounters an error. There is no way to fix this error without shutting down the system.',
+                                'Poorly tested software systems will be more prone to errors.',
+                                'Software testing can be started only after the software development is completed.',
+                                'After completely testing software, there can still be errors in the software.'
+                            ],
+                            answer: [
+                                'Poorly tested software systems will be more prone to errors.',
+                                'After completely testing software, there can still be errors in the software.'
                             ]
+                        },
+                        {
+                            text: '2) Choose the correct sequence of testing levels based on the SDLC phase they are applied to. First to last from left to right. \
+                            (1) Beta Testing\
+                            (2) Unit Testing\
+                            (3) System Testing\
+                            (4) Integration Testing\
+                            (5) Acceptance Testing',
+                            points: 1,
+                            options: [
+                                '4 -> 2 -> 3 -> 1 -> 5',
+                                '2 -> 1-> 4 -> 3 -> 5',
+                                '5 -> 2 -> 3 -> 4 -> 1',
+                                '2 -> 4 - > 3 -> 5 -> 1'
+                            ],
+                            answer: '2 -> 4 - > 3 -> 5 -> 1'
+                        },
+                        {
+                            text: '4) There was an error detected in a software that has been developed and deployed. This error was fixed by the software developer. After fixing the error the developer wants to test that the whole system is working correctly, this testing is typically referred to as ______',
+                            points: 1,
+                            options: [
+                                'Functional testing',
+                                'Regression testing',
+                                'System testing',
+                                'Acceptance testing'
+                            ],
+                            answer: 'Regression testing'
+                        },
+                        {
+                            text: '4) You want to develop an Android app that contains only one button. On pressing this button the whole screen turns white if its black, and turns black if its white. Initially when the app is started the screen is white. Your job is to develop this app and test the correctness, and complete this process quickly. Choose the minimum level of testing that should be sufficient while not compromising on the correctness.',
+                            points: 1,
+                            options: [
+                                'Level 0',
+                                'Level 1',
+                                'Level 2',
+                                'Level 3'
+                            ],
+                            answer: 'Level 1'
                         }
+
                     ]
                 }
             ]
@@ -114,6 +173,23 @@ function CoursePage() {
         { icon: <Bot />, label: "ChatBot", url: `/chatbot/${courseName}` },
         { icon: <MessagesSquare />, label: "Chatroom", url: `/chatroom/${courseName}` },
     ];
+    
+    const handleStartResize = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        resizeStartPosRef.current = {
+            x: e.clientX,
+            y: e.clientY
+        };
+
+        initialSizeRef.current = {
+            width: chatbotSize.width,
+            height: chatbotSize.height
+        };
+
+        setIsResizing(true);
+    };
 
     const weeks = Array.from({ length: 12 }, (_, i) => ({
         number: i + 1,
