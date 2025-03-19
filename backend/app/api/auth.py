@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__) # Initialize a logger
 @auth.route('/v1/signup/', methods=['POST'])
 #@cross_origin(origins=["http://localhost:5173","http://localhost:5000", "http://localhost:8080","https://editor.swagger.io","https://editor-next.swagger.io"], supports_credentials=True)
 def signup():
+    logger.debug("Signup route called")
     data = request.get_json()
     if not data or 'email' not in data or 'password' not in data or 'username' not in data or 'role' not in data or 'courses' not in data:
         return jsonify({'message': 'Missing email, username, password, role, or courses'}), 400
@@ -80,6 +81,7 @@ def login():
 @login_required
 #@cross_origin(origins=["http://localhost:5173", "http://localhost:5000", "http://localhost","https://editor.swagger.io", "https://editor-next.swagger.io"], supports_credentials=True)
 def check_auth():
+    logger.debug(f"Check-auth route called for user: {current_user.email}")
     """
     Check if the user is authenticated.
     Returns user details if authenticated.
@@ -114,22 +116,26 @@ def logout():
 @auth.route('/v1/user', methods=['GET'])
 @login_required
 def get_user():
+    logger.debug(f"Get user route called for user: {current_user.email}")
     return jsonify(current_user.to_dict())  # Ensure that `to_dict()` method exists on your User model
 
 @auth.route('/v1/courses', methods=['GET'])
 @login_required
 def get_courses():
+    logger.debug(f"Get courses route called for user: {current_user.email}")
     courses = [course.to_dict() for course in current_user.courses]
     return jsonify({'courses': courses})
 
 @auth.route('/v1/all-courses', methods=['GET'])
 def get_all_courses():
+    logger.debug("Get all courses route called")
     courses = [course.to_dict() for course in Courses.query.all()]
     return jsonify({'courses': courses})
 
 @auth.route('/v1/courses/add', methods=['POST'])
 @login_required
 def add_courses():
+    logger.debug(f"Add courses route called for user: {current_user.email}")
     data = request.get_json()
     if not data or 'course_names' not in data:
         return jsonify({'message': 'Missing course names'}), 400
@@ -152,6 +158,7 @@ def add_courses():
 @auth.route('/v1/courses/drop', methods=['POST'])
 @login_required
 def drop_courses():
+    logger.debug(f"Drop courses route called for user: {current_user.email}")
     data = request.get_json()
     if not data or 'course_names' not in data:
         return jsonify({'message': 'Missing course names'}), 400
@@ -177,6 +184,7 @@ def drop_courses():
 @auth.route('/v1/courses/change', methods=['POST'])
 @login_required
 def change_courses():
+    logger.debug(f"Change courses route called for user: {current_user.email}")
     data = request.get_json()
     if not data or 'old_course_names' not in data or 'new_course_names' not in data:
         return jsonify({'message': 'Missing old course names or new course names'}), 400
@@ -205,6 +213,7 @@ def change_courses():
 @auth.route('/v1/courses/<course_name>', methods=['GET'])
 @login_required
 def get_course_details(course_name):
+    logger.debug(f"Get course details route called for course: {course_name}")
     course = Courses.query.filter_by(name=course_name).first()
     if not course:
         return jsonify({'message': 'Course not found'}), 404
@@ -214,6 +223,7 @@ def get_course_details(course_name):
 @auth.route('/v1/available-courses', methods=['GET'])
 @login_required
 def get_available_courses():
+    logger.debug(f"Get available courses route called for user: {current_user.email}")
     user_courses = {course.name for course in current_user.courses}
     all_courses = {course.name for course in Courses.query.all()}
     available_courses = all_courses - user_courses
@@ -226,6 +236,7 @@ def get_available_courses():
 @auth.route('/v1/notes', methods=['POST'])
 @login_required
 def create_note():
+    logger.debug(f"Create note route called for user: {current_user.email}")
     data = request.get_json()
     if not data or 'title' not in data or 'content' not in data or 'courseId' not in data:
         return jsonify({'message': 'Missing title, content, or courseId'}), 400
@@ -249,6 +260,7 @@ def create_note():
 @auth.route('/v1/notes', methods=['GET'])
 @login_required
 def get_user_notes():
+    logger.debug(f"Get user notes route called for user: {current_user.email}")
     # Optional query parameters for filtering
     course_id = request.args.get('courseId', type=int)
     
@@ -263,6 +275,7 @@ def get_user_notes():
 @auth.route('/v1/notes/<int:note_id>', methods=['GET'])
 @login_required
 def get_note_details(note_id):
+    logger.debug(f"Get note details route called for note: {note_id}")
     note = Notes.query.filter_by(id=note_id, userId=current_user.id).first()
     if not note:
         return jsonify({'message': 'Note not found'}), 404
@@ -272,6 +285,7 @@ def get_note_details(note_id):
 @auth.route('/v1/notes/<int:note_id>', methods=['PUT'])
 @login_required
 def update_note(note_id):
+    logger.debug(f"Update note route called for note: {note_id}")
     note = Notes.query.filter_by(id=note_id, userId=current_user.id).first()
     if not note:
         return jsonify({'message': 'Note not found'}), 404
@@ -297,6 +311,7 @@ def update_note(note_id):
 @auth.route('/v1/notes/<int:note_id>', methods=['DELETE'])
 @login_required
 def delete_note(note_id):
+    logger.debug(f"Delete note route called for note: {note_id}")
     note = Notes.query.filter_by(id=note_id, userId=current_user.id).first()
     if not note:
         return jsonify({'message': 'Note not found'}), 404
@@ -311,6 +326,7 @@ def delete_note(note_id):
 @login_required
 #@cross_origin(origins="http://localhost:5173", supports_credentials=True)
 def get_user_chatrooms():
+    logger.debug(f"Get chatrooms route called for user: {current_user.email}")
     """Get all chatrooms for the current user"""
     # Find all courses the user is enrolled in
     user_courses = current_user.courses
@@ -341,6 +357,7 @@ def get_user_chatrooms():
 @login_required
 #@cross_origin(origins="http://localhost:5173", supports_credentials=True)
 def get_course_chatroom(course_id):
+    logger.debug(f"Get course chatroom route called for course ID: {course_id}")
     """Get or create a chatroom for a specific course"""
     # Check if course exists and user is enrolled
     course = Courses.query.get(course_id)
@@ -376,6 +393,7 @@ def get_course_chatroom(course_id):
 @login_required
 #@cross_origin(origins="http://localhost:5173", supports_credentials=True)
 def get_chatroom_messages(chatroom_id):
+    logger.debug(f"Get chatroom messages route called for chatroom: {chatroom_id}")
     """Get all messages for a specific chatroom"""
     # Verify chatroom exists and belongs to current user
     chatroom = Chatroom.query.get(chatroom_id)
@@ -413,6 +431,7 @@ def get_chatroom_messages(chatroom_id):
 @login_required
 #@cross_origin(origins="http://localhost:5173", supports_credentials=True)
 def send_message():
+    logger.debug(f"Send message route called by user: {current_user.email}")
     """Send a new message"""
     data = request.get_json()
     if not data or 'courseId' not in data or 'message' not in data:
@@ -467,6 +486,7 @@ def send_message():
 @login_required
 #@cross_origin(origins="http://localhost:5173", supports_credentials=True)
 def get_course_members(course_id):
+    logger.debug(f"Get course members route called for course ID: {course_id}")
     """Get all members of a course"""
     # Verify course exists
     course = Courses.query.get(course_id)
@@ -492,6 +512,7 @@ def get_course_members(course_id):
 @login_required
 #@cross_origin(origins="http://localhost:5173", supports_credentials=True)
 def edit_message(message_id):
+    logger.debug(f"Edit message route called for message ID: {message_id}")
     """Edit a message"""
     # Verify message exists and belongs to current user
     message = Messages.query.get(message_id)
@@ -534,6 +555,7 @@ def edit_message(message_id):
 @login_required
 #@cross_origin(origins="http://localhost:5173", supports_credentials=True)
 def delete_message(message_id):
+    logger.debug(f"Delete message route called for message ID: {message_id}")
     """Delete a message"""
     # Verify message exists and belongs to current user
     message = Messages.query.get(message_id)
