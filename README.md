@@ -1,13 +1,18 @@
 # soft-engg-project-jan-2025-se-Jan-6
-Software Engineering Project [Jan 2025 Term - Team 6] - AI Agent for Academic Guidance
+Software Engineering Project [Jan 2025 Term - Team 6] - AI Agent for Academic Guidance is a React-based frontend integrated with a Flask backend. This project is designed as an AI-powered academic guidance assistant, helping students with various course-related activities. The AI chatbot serves as a virtual assistant, answering queries, providing resources, and assisting with academic tasks.
 
-This is a React-based frontend application designed to work with a Flask backend(which is not connected yet). It features functional, dynamic and a user-friendly interface.
 
 ## Features
 - Dynamic navigation with routes
 - Responsive and stylish UI
 - Profile page with a professional design
 - Desing Based on the submitted wireframe
+- AI Chatbot Assistant – Provides academic guidance based on user query
+- Course Management – Allows students to select, drop, or change courses
+- Lecture & Notes Access – View and download lecture materials and notes
+- Chatroom – Enables discussions and collaboration among students, professors and TAs
+- Past Year Questions (PYQs) – Access and review previous exam questions
+- Assignments – View and submit assignments
 
 ## Installation
 
@@ -104,7 +109,7 @@ Project Folder/
 ```
 
 ## Environment Variables
-This is frontend only project with no backend integration as of February 20, 2025.
+You are advised to use the Virtual Env especially for the backend as mentioned above.
 
 ## Contributing
 This is an Academic Project, and only assigned students can contribute.
