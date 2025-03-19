@@ -4,14 +4,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app.models import User, Role, UserRoles, Courses, db, Notes, Messages, Chatroom
 from datetime import datetime
 import logging
-from flask_cors import cross_origin
+#from flask_cors import cross_origin
 import uuid
 
 auth = Blueprint('auth', __name__, url_prefix='/api')
 logger = logging.getLogger(__name__) # Initialize a logger
 
 @auth.route('/v1/signup/', methods=['POST'])
-@cross_origin(origins=["http://localhost:5173","http://localhost:5000", "http://localhost:8080","https://editor.swagger.io","https://editor-next.swagger.io"], supports_credentials=True)
+#@cross_origin(origins=["http://localhost:5173","http://localhost:5000", "http://localhost:8080","https://editor.swagger.io","https://editor-next.swagger.io"], supports_credentials=True)
 def signup():
     data = request.get_json()
     if not data or 'email' not in data or 'password' not in data or 'username' not in data or 'role' not in data or 'courses' not in data:
@@ -50,7 +50,7 @@ def signup():
     return jsonify({'message': 'User created successfully', 'user': new_user.to_dict()}), 201
 
 @auth.route('/v1/login/', methods=['POST'])
-@cross_origin(origins=["http://localhost:5173", "http://localhost:5000", "http://localhost:8080","https://editor.swagger.io","https://editor-next.swagger.io"], supports_credentials=True)
+#@cross_origin(origins=["http://localhost:5173", "http://localhost:5000", "http://localhost:8080","https://editor.swagger.io","https://editor-next.swagger.io"], supports_credentials=True)
 def login():
     logger.debug("Login route called")
     data = request.get_json()
@@ -78,8 +78,7 @@ def login():
 
 @auth.route('/v1/check-auth', methods=['GET'])
 @login_required
-@cross_origin(origins=["http://localhost:5173", "http://localhost:5000", "http://localhost",
-                        "https://editor.swagger.io", "https://editor-next.swagger.io"], supports_credentials=True)
+#@cross_origin(origins=["http://localhost:5173", "http://localhost:5000", "http://localhost","https://editor.swagger.io", "https://editor-next.swagger.io"], supports_credentials=True)
 def check_auth():
     """
     Check if the user is authenticated.
@@ -310,7 +309,7 @@ def delete_note(note_id):
 
 @auth.route('/v1/chatrooms', methods=['GET'])
 @login_required
-@cross_origin(origins="http://localhost:5173", supports_credentials=True)
+#@cross_origin(origins="http://localhost:5173", supports_credentials=True)
 def get_user_chatrooms():
     """Get all chatrooms for the current user"""
     # Find all courses the user is enrolled in
@@ -340,7 +339,7 @@ def get_user_chatrooms():
 
 @auth.route('/v1/chatrooms/<int:course_id>', methods=['GET'])
 @login_required
-@cross_origin(origins="http://localhost:5173", supports_credentials=True)
+#@cross_origin(origins="http://localhost:5173", supports_credentials=True)
 def get_course_chatroom(course_id):
     """Get or create a chatroom for a specific course"""
     # Check if course exists and user is enrolled
@@ -375,7 +374,7 @@ def get_course_chatroom(course_id):
 
 @auth.route('/v1/messages/<int:chatroom_id>', methods=['GET'])
 @login_required
-@cross_origin(origins="http://localhost:5173", supports_credentials=True)
+#@cross_origin(origins="http://localhost:5173", supports_credentials=True)
 def get_chatroom_messages(chatroom_id):
     """Get all messages for a specific chatroom"""
     # Verify chatroom exists and belongs to current user
@@ -412,7 +411,7 @@ def get_chatroom_messages(chatroom_id):
 
 @auth.route('/v1/messages', methods=['POST'])
 @login_required
-@cross_origin(origins="http://localhost:5173", supports_credentials=True)
+#@cross_origin(origins="http://localhost:5173", supports_credentials=True)
 def send_message():
     """Send a new message"""
     data = request.get_json()
@@ -466,7 +465,7 @@ def send_message():
 
 @auth.route('/v1/course-members/<int:course_id>', methods=['GET'])
 @login_required
-@cross_origin(origins="http://localhost:5173", supports_credentials=True)
+#@cross_origin(origins="http://localhost:5173", supports_credentials=True)
 def get_course_members(course_id):
     """Get all members of a course"""
     # Verify course exists
@@ -491,7 +490,7 @@ def get_course_members(course_id):
 
 @auth.route('/v1/messages/<int:message_id>', methods=['PUT'])
 @login_required
-@cross_origin(origins="http://localhost:5173", supports_credentials=True)
+#@cross_origin(origins="http://localhost:5173", supports_credentials=True)
 def edit_message(message_id):
     """Edit a message"""
     # Verify message exists and belongs to current user
@@ -533,7 +532,7 @@ def edit_message(message_id):
 
 @auth.route('/v1/messages/<int:message_id>', methods=['DELETE'])
 @login_required
-@cross_origin(origins="http://localhost:5173", supports_credentials=True)
+#@cross_origin(origins="http://localhost:5173", supports_credentials=True)
 def delete_message(message_id):
     """Delete a message"""
     # Verify message exists and belongs to current user

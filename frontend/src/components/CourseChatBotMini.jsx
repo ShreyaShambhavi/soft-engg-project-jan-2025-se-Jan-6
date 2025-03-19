@@ -27,7 +27,7 @@ const CourseChatBotMini = ({ courseName }) => {
       setMessages(prev => [...prev, userMessage]);
       setInputMessage('');
 
-      const response = await fetch('http://localhost:5000/chat', {
+      const response = await fetch('http://localhost:5000/v1/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

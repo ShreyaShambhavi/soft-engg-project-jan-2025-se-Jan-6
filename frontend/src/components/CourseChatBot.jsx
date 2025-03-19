@@ -36,7 +36,7 @@ const CourseChatBot = ({ courseName }) => {
       setInputMessage('');
 
       // Send message to API with path parameter
-      const response = await fetch('http://localhost:5000/chat', {
+      const response = await fetch('http://localhost:5000/v1/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,11 +1,14 @@
 from app import create_app
 from together import Together
 from flask import request, jsonify
-# from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 
 app = create_app()
 
-# CORS(app)
+# Add CORS configuration for the chat endpoint
+CORS(app, resources={
+    r"/v1/chat": {"origins": ["http://localhost:5173", "http://localhost:5000", "http://localhost", "https://editor.swagger.io"], "supports_credentials": True}
+})
 
 TOGETHER_API_KEY = "e4496792b64a18f405d6f2ff88543aaa95b6e348d688c01e9ec8133a77b68476"
 client = Together(api_key=TOGETHER_API_KEY)
@@ -33,7 +36,7 @@ def get_system_prompt(course_name=None):
     """
 
 
-@app.route('/chat', methods=['POST'])
+@app.route('/v1/chat', methods=['POST'])
 def chat():
     data = request.json
     user_message = data.get('message', '')
