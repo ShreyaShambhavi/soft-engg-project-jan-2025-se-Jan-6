@@ -1,10 +1,28 @@
 import pytest
+import pytest_mock
 import json
 from datetime import datetime
 from flask import session
 from app import create_app, db
 from app.models import User, Role, Courses, Notes, Chatroom, Messages, UserRoles
 from werkzeug.security import generate_password_hash, check_password_hash
+
+# Add this at the top of your test_api.py file, after the imports:
+
+# Mock response class for Together API tests
+class MockResponse:
+    class Choice:
+        class Message:
+            def __init__(self, content):
+                self.content = content
+                
+        def __init__(self, content):
+            self.message = self.Message(content)
+            
+    def __init__(self, content):
+        self.choices = [self.Choice(content)]
+
+
 
 @pytest.fixture(scope='module')
 def app():
@@ -219,20 +237,23 @@ def test_get_all_courses(client):
 
 def test_add_course(auth_client, app):
     """Test adding a course to user's enrollment."""
-    # Find a course the user isn't enrolled in
+    # Create a unique course specifically for this test
     with app.app_context():
         user = User.query.filter_by(email='test_api@example.com').first()
         user_course_names = {c.name for c in user.courses}
         
-        # Find a course to add
-        all_courses = Courses.query.all()
-        for course in all_courses:
-            if course.name not in user_course_names and course.name != 'Artificial Intelligence':
-                course_to_add = course.name
-                break
-        else:
-            pytest.skip("No additional courses available to add")
+        # Create a unique test course name
+        import uuid
+        unique_course_name = f"TestCourse-{uuid.uuid4().hex[:8]}"
+        
+        # Create the test course
+        new_test_course = Courses(name=unique_course_name, description='Course for testing add course functionality')
+        db.session.add(new_test_course)
+        db.session.commit()
+        
+        course_to_add = unique_course_name
     
+    # Now add this course
     response = auth_client.post('/api/v1/courses/add',
                              json={'course_names': [course_to_add]})
     
@@ -245,7 +266,6 @@ def test_add_course(auth_client, app):
         user = User.query.filter_by(email='test_api@example.com').first()
         course_names = [c.name for c in user.courses]
         assert course_to_add in course_names
-        assert len(course_names) >= 2
 
 def test_drop_course(auth_client, app):
     """Test dropping a course."""

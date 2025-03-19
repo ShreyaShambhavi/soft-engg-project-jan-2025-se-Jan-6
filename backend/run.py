@@ -2,6 +2,14 @@ from app import create_app
 from together import Together
 from flask import request, jsonify
 from flask_cors import CORS, cross_origin
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger('chatbot-api')
 
 app = create_app()
 
@@ -21,6 +29,7 @@ chat_sessions = {}
 
 # System prompt template for educational context
 def get_system_prompt(course_name=None):
+    logger.debug(f"Generating system prompt for course: {course_name}")
     return f"""
     You are an educational AI assistant for IIT Madras' Degree in Data Science and Applications program.
 
@@ -38,10 +47,14 @@ def get_system_prompt(course_name=None):
 
 @app.route('/v1/chat', methods=['POST'])
 def chat():
+    logger.info("Chatbot API endpoint called")
     data = request.json
     user_message = data.get('message', '')
     session_id = data.get('session_id', 'default')
     path_param = data.get('path_param', 'default').lower()
+    
+    logger.debug(f"Request params - session_id: {session_id}, path_param: {path_param}")
+    logger.debug(f"User message: '{user_message}'")
     
     # Use path parameter as course context if available
     course_context = path_param.replace('-', ' ').title() if path_param != 'default' else None
@@ -49,14 +62,19 @@ def chat():
     
     # Initialize session if it doesn't exist
     if session_id not in chat_sessions:
+        logger.debug(f"Initializing new chat session: {session_id}")
         chat_sessions[session_id] = [
             {"role": "system", "content": system_prompt}
         ]
     
     # Add user message to session history
     chat_sessions[session_id].append({"role": "user", "content": user_message})
+    logger.debug(f"Current history length for session {session_id}: {len(chat_sessions[session_id])}")
     
     try:
+        # Log before API call
+        logger.info(f"Sending request to Together API - model: {MODEL}")
+        
         # Send the request to the LLM
         response = client.chat.completions.create(
             model=MODEL,
@@ -67,22 +85,38 @@ def chat():
         
         # Get the model's response
         assistant_response = response.choices[0].message.content
+        logger.debug(f"Received response from API: '{assistant_response[:50]}...'")
         
         # Add the assistant's response to the session history
         chat_sessions[session_id].append({"role": "assistant", "content": assistant_response})
         
         # Return the response
+        logger.info("Successfully processed chatbot request")
         return jsonify({
-            "success": True,  # Changed to match frontend expectation
+            "success": True,
             "response": assistant_response,
             "history": chat_sessions[session_id]
         })
         
     except Exception as e:
+        logger.error(f"Error processing chatbot request: {str(e)}", exc_info=True)
         return jsonify({
-            "success": False,  # Changed to match frontend expectation
+            "success": False,
             "message": str(e)
         })
 
+
+# Add a route to check if the API is working
+@app.route('/v1/chatbot-status', methods=['GET'])
+def chatbot_status():
+    logger.info("Chatbot status endpoint called")
+    return jsonify({
+        "status": "operational",
+        "model": MODEL,
+        "active_sessions": len(chat_sessions)
+    })
+
+
 if __name__ == '__main__':
+    logger.info("Starting chatbot API server")
     app.run(debug=True, port=5000)
