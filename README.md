@@ -76,15 +76,31 @@ npm run preview
 
 ## Project Structure
 ```
-m4-frontend/
-│── src/
-│   ├── components/    # Reusable React components/Pages
-│   ├── App.jsx        # Main application component
-│   ├── main.jsx       # React entry point
-│
-├── public/            # Static assets
-├── package.json       # Project dependencies and scripts
-├── README.md          # Project documentation
+Project Folder/
+├──backend/
+| ├── app/
+| │   ├── api/
+| │   │   ├── __init__.py
+| │   │   └── auth.py
+| │   ├── __init__.py
+| │   ├── models.py
+| ├── tests/
+| │   ├── test_api.py
+| │   └── test_chatbot.py
+| ├── transcripts/
+| ├── config.py
+| ├── requirements.txt
+| └── run.py
+|
+├──frontend/
+| │── src/
+| │   ├── components/    # Reusable React components/Pages
+| │   ├── App.jsx        # Main application component
+| │   ├── main.jsx       # React entry point
+| │
+| ├── public/            # Static assets
+| ├── package.json       # Project dependencies and scripts
+| ├── README.md          # Project documentation
 ```
 
 ## Environment Variables
