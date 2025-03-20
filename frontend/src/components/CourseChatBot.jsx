@@ -10,7 +10,8 @@ const CourseChatBot = ({ courseName }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState('');
   const messagesEndRef = useRef(null);
-  
+  const inputRef = useRef(null); // Create a ref for the input
+
   // Extract path parameter from URL
   const location = useLocation();
   const pathSegment = location.pathname.split('/').filter(segment => segment).pop() || 'default';
@@ -25,11 +26,12 @@ const CourseChatBot = ({ courseName }) => {
 
   // Handle sending message to API
   const handleSendMessage = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default form submission
     if (!inputMessage.trim()) return;
 
     try {
-      setIsLoading(true);
+      setIsLoading(true); // Set loading state
+
       // Add user message to chat
       const userMessage = { type: 'user', content: inputMessage };
       setMessages(prev => [...prev, userMessage]);
@@ -65,6 +67,14 @@ const CourseChatBot = ({ courseName }) => {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      setTimeout(() => inputRef.current.focus(), 100); // Focus on the input after sending
+    }
+  };
+
+  // Handle Enter key press
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSendMessage(e); // Call the submit handler on Enter press
     }
   };
 
@@ -220,11 +230,13 @@ const CourseChatBot = ({ courseName }) => {
           <form onSubmit={handleSendMessage} className="flex items-center gap-2">
             <input
               type="text"
+              ref={inputRef} // Assign the ref to the input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="What are Transformers?"
               className="flex-1 outline-none text-sm p-3 border rounded-lg"
               disabled={isLoading}
+              onKeyPress={handleKeyPress} // Handle Enter key press
             />
             <button
               type="submit"
