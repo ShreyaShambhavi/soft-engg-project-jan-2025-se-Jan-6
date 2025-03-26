@@ -245,6 +245,9 @@ def create_note():
     if not course:
         return jsonify({'message': 'Course not found'}), 404
 
+    if course not in current_user.courses:
+        return jsonify({'message': 'You are not enrolled in this course'}), 403
+
     new_note = Notes(
         userId=current_user.id, 
         courseId=data['courseId'], 
@@ -303,6 +306,8 @@ def update_note(note_id):
         course = Courses.query.get(data['courseId'])
         if not course:
             return jsonify({'message': 'Course not found'}), 404
+        if course not in current_user.courses:
+            return jsonify({'message': 'You are not enrolled in this course'}), 403
         note.courseId = data['courseId']
 
     db.session.commit()

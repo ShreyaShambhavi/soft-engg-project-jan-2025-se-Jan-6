@@ -34,6 +34,7 @@ function CoursePage() {
 
     useEffect(() => {
         fetchCourseData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [courseName]);
 
     const fetchCourseData = async () => {
@@ -266,13 +267,13 @@ function CoursePage() {
             {/* Main Content Area */}
             <div className="flex-1">
                 {/* Header */}
-                <header cTlassName="bg-white border-b px-6 py-3 flex items-center justify-between">
+                <header className="bg-white border-b px-6 py-3 flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                         <Search className="w-5 h-5 text-gray-400" />
-                        <Bell className="w-5 h-5 text-gray-400" />
+                        <Bell onClick={() => window.location.href = '/announcements'} className="cursor-pointer w-5 h-5 text-gray-400" />
                     </div>
                     <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 bg-red-600 rounded-full text-white flex items-center justify-center">
+                        <div onClick={() => window.location.href = '/profile'} className="cursor-pointer w-8 h-8 bg-red-600 rounded-full text-white flex items-center justify-center">
                             {courseData?.instructor?.charAt(0).toUpperCase() || 'U'}
                         </div>
                     </div>

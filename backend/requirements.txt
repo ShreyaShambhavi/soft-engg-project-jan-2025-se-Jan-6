@@ -53,3 +53,4 @@ yarl==1.18.3
 transformers
 sentence-transformers
 psycopg2-binary
+chromadb
