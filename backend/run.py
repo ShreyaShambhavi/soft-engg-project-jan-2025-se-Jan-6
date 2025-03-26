@@ -26,8 +26,8 @@ client = Together(api_key=TOGETHER_API_KEY)
 # Define the model to use
 MODEL = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
 
-client = chromadb.PersistentClient(path="vectordb")
-collection = client.get_collection("pdf_embeddings")
+chroma_client = chromadb.PersistentClient(path="vectordb")
+collection = chroma_client.get_collection("pdf_embeddings")
 results = collection.get()
 
 # Store chat histories for different sessions
