@@ -238,9 +238,12 @@ const Profile = () => {
                       Role
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="font-medium">{user ? user.roles.map(role => role.name).join(', ') : 'Student'}</div>
+                      <div className="font-medium">
+                      {user ? user.roles : 'not available'}
+                        {user ? user.roles.map(role => role.name).join(', ') : 'Student'}
+                        </div>
                       <button className="text-gray-400 hover:text-red-500 p-1 hover:bg-gray-100 rounded transition">
-                        <Pencil size={16} />
+                        
                       </button>
                     </div>
                   </div>
