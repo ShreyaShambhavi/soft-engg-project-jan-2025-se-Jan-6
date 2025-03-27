@@ -7,20 +7,10 @@ import LogoutButton from "./LogoutButton";
 const Dashboard = () => {
   const [activeIcon, setActiveIcon] = useState('Home');
   const [user, setUser] = useState(null);
-
-  // Initialize tasks from localStorage or use an empty array if no tasks are saved
-  const [tasks, setTasks] = useState(() => {
-    const savedTasks = localStorage.getItem('tasks');
-    return savedTasks ? JSON.parse(savedTasks) : [];
-  });
-
+  const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState(''); // State for new task input
 
-  // Save tasks to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-  }, [tasks]);
-
+  // Fetch user data and load tasks for the specific user
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -35,6 +25,10 @@ const Dashboard = () => {
 
         const data = await response.json();
         setUser(data);
+
+        // Load tasks for the specific user from localStorage
+        const savedTasks = localStorage.getItem(`tasks_${data.id}`);
+        setTasks(savedTasks ? JSON.parse(savedTasks) : []);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -42,6 +36,13 @@ const Dashboard = () => {
 
     fetchUserData();
   }, []);
+
+  // Save tasks to localStorage whenever they change
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem(`tasks_${user.id}`, JSON.stringify(tasks));
+    }
+  }, [tasks, user]);
 
   const studyHoursData = [
     { month: 'Dec 2024', you: 2, students: 3 },
