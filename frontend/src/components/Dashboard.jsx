@@ -8,6 +8,19 @@ const Dashboard = () => {
   const [activeIcon, setActiveIcon] = useState('Home');
   const [user, setUser] = useState(null);
 
+  // Initialize tasks from localStorage or use an empty array if no tasks are saved
+  const [tasks, setTasks] = useState(() => {
+    const savedTasks = localStorage.getItem('tasks');
+    return savedTasks ? JSON.parse(savedTasks) : [];
+  });
+
+  const [newTask, setNewTask] = useState(''); // State for new task input
+
+  // Save tasks to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }, [tasks]);
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -44,11 +57,6 @@ const Dashboard = () => {
     { day: 'Fri', hours: 1 }
   ];
 
-  const tasks = [
-    { name: 'Watch Lecture 3.1 to 3.5', points: '+5 points', completed: false },
-    { name: 'Make Notes for LLM', points: '+5 points', completed: true }
-  ];
-
   const events = [
     { name: 'Milestone 2 Submission Deadline', date: 'Feb 9th' },
     { name: 'LLM Live Session', date: 'Feb 15th' },
@@ -71,9 +79,31 @@ const Dashboard = () => {
     { icon: BookCopy, label: 'Courses', url: "/courses" },
   ];
 
+  // Add a new task
+  const addTask = () => {
+    if (newTask.trim() === '') return; // Prevent empty tasks
+    const newTaskObj = { name: newTask, points: '+5 points', completed: false };
+    setTasks([...tasks, newTaskObj]); // Add the new task to the list
+    setNewTask(''); // Clear the input field
+  };
+
+  // Toggle task completion
+  const toggleTaskCompletion = (index) => {
+    const updatedTasks = tasks.map((task, i) =>
+      i === index ? { ...task, completed: !task.completed } : task
+    );
+    setTasks(updatedTasks); // Update the tasks state
+  };
+
+  // Delete a task
+  const deleteTask = (index) => {
+    const updatedTasks = tasks.filter((_, i) => i !== index);
+    setTasks(updatedTasks); // Update the tasks state
+  };
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation Bar - Exactly matching the reference */}
+      {/* Navigation Bar */}
       <nav className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center">
           <img 
@@ -98,7 +128,7 @@ const Dashboard = () => {
       </nav>
 
       <div className="flex">
-        {/* Icon Sidebar - Exactly matching the reference */}
+        {/* Icon Sidebar */}
         <div className="w-16 border-r min-h-screen pt-6 flex flex-col items-center">
           {sidebarIcons.map((item) => (
             <button 
@@ -140,14 +170,45 @@ const Dashboard = () => {
             <div className="col-span-1 bg-white shadow-lg rounded-lg overflow-hidden">
               <div className="p-6">
                 <h3 className="text-xl font-semibold mb-4">Tasks Tracker</h3>
+
+                {/* Input for Adding New Tasks */}
+                <div className="flex items-center gap-2 mb-4">
+                  <input
+                    type="text"
+                    placeholder="Add a new task"
+                    value={newTask}
+                    onChange={(e) => setNewTask(e.target.value)}
+                    className="flex-1 p-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-red-500"
+                  />
+                  <button
+                    onClick={addTask}
+                    className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                  >
+                    Add
+                  </button>
+                </div>
+
+                {/* List of Tasks */}
                 {tasks.map((task, index) => (
                   <div key={index} className="flex items-center gap-2 mb-4">
-                    <input type="checkbox" checked={task.completed} className="w-4 h-4" />
-                    <span className="flex-1">{task.name}</span>
+                    <input
+                      type="checkbox"
+                      checked={task.completed}
+                      onChange={() => toggleTaskCompletion(index)} // Toggle completion
+                      className="w-4 h-4"
+                    />
+                    <span className={`flex-1 ${task.completed ? 'line-through text-gray-400' : ''}`}>
+                      {task.name}
+                    </span>
                     <span className="text-sm text-gray-500">{task.points}</span>
+                    <button
+                      onClick={() => deleteTask(index)} // Delete task
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      Delete
+                    </button>
                   </div>
                 ))}
-                <button className="text-red-500 text-sm">+ New Tasks</button>
               </div>
             </div>
 
