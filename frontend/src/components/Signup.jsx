@@ -1,7 +1,7 @@
 // eslint-disable-next-line no-unused-vars
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, ChevronDown, Check } from 'lucide-react';
+import { Eye, EyeOff, ChevronDown, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext'; // Import useAuth instead of AuthContext
 
 const Signup = () => {
@@ -15,6 +15,7 @@ const Signup = () => {
   const [allCourses, setAllCourses] = useState([]);
   const [error, setError] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // ✅ State for password visibility
 
   useEffect(() => {
     fetchAllCourses();
@@ -53,7 +54,6 @@ const Signup = () => {
       // If signup is successful, proceed to login
       try {
         await login(email, password); // Pass email and password to login function
-        // Navigation will be handled by the login function if successful
         navigate('/dashboard');
       } catch (loginError) {
         throw new Error('Signup successful but could not log in automatically. Please log in manually.');
@@ -61,7 +61,6 @@ const Signup = () => {
     } catch (err) {
       setError(err.message);
       if (err.message.includes('Signup successful')) {
-        // If signup was successful but login failed, redirect to login
         setTimeout(() => navigate('/login'), 2000);
       }
     }
@@ -126,16 +125,23 @@ const Signup = () => {
                   />
                 </div>
                 
+                {/* Password Input Field with Eye Icon */}
                 <div className="relative">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"} // ✅ Toggle input type
                     placeholder="Password"
                     className="w-full p-3 bg-gray-50 border rounded-md focus:outline-none focus:ring-1 focus:ring-red-500"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
-                  <Eye className="absolute right-3 top-3 text-gray-400" size={20} />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)} // ✅ Toggle visibility
+                    className="absolute right-3 top-3 text-gray-400"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />} {/* ✅ Toggle icon */}
+                  </button>
                 </div>
                 
                 <div>

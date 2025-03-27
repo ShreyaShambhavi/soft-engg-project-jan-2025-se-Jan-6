@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext"; // ✅ Import AuthContext
 import { useNavigate } from "react-router-dom";  // ✅ For redirection
-import { Eye } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
   const { login } = useAuth();  // ✅ Get login function from context
@@ -10,6 +10,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // ✅ State for password visibility
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -63,12 +64,20 @@ const Login = () => {
                 
                 <div className="relative">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="Password"
                     className="w-full p-3 bg-gray-50 border rounded-md focus:outline-none focus:ring-1 focus:ring-red-500"
                     value={password} onChange={(e) => setPassword(e.target.value)}
                   />
-                  <Eye className="absolute right-3 top-3 text-gray-400" size={20} />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)} // **Line 52: Toggle visibility**
+                    className="absolute right-3 top-3 text-gray-400"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />} {/* **Line 53: Toggle icon** */}
+                  </button>
+
+              
                 </div>
 
                 <div className="flex items-center justify-between">
