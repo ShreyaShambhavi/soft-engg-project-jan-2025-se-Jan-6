@@ -214,23 +214,49 @@ const Dashboard = () => {
             </div>
 
             {/* Calendar */}
-            <div className="col-span-1 bg-white shadow-lg rounded-lg overflow-hidden">
-              <div className="p-6">
-                <h3 className="text-xl font-semibold mb-4">February 2025</h3>
-                <div className="grid grid-cols-7 gap-2 text-sm">
-                  <div className="text-red-500">Mon</div>
-                  <div className="text-red-500">Tue</div>
-                  <div className="text-red-500">Wed</div>
-                  <div className="text-red-500">Thu</div>
-                  <div className="text-red-500">Fri</div>
-                  <div className="text-red-500">Sat</div>
-                  <div className="text-red-500">Sun</div>
-                  {Array.from({ length: 28 }).map((_, i) => (
-                    <div key={i} className="text-center py-2">{i + 1}</div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {/* Dynamic Calendar */}
+<div className="col-span-1 bg-white shadow-lg rounded-lg overflow-hidden">
+  <div className="p-6">
+    <h3 className="text-xl font-semibold mb-4">
+      {new Date().toLocaleString('default', { month: 'long' })} {new Date().getFullYear()}
+    </h3>
+    <div className="grid grid-cols-7 gap-2 text-sm">
+      {/* Weekday Headers */}
+      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+        <div key={day} className="text-red-500 text-center">
+          {day}
+        </div>
+      ))}
+
+      {/* Days of the Month */}
+      {(() => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth(); // 0-indexed (0 = January, 1 = February, etc.)
+        const firstDayOfMonth = new Date(year, month, 1).getDay(); // Day of the week (0 = Sunday, 6 = Saturday)
+        const daysInMonth = new Date(year, month + 1, 0).getDate(); // Total days in the current month
+
+        // Adjust firstDayOfMonth to make Monday the first column (1 = Monday, 7 = Sunday)
+        const adjustedFirstDay = (firstDayOfMonth === 0 ? 7 : firstDayOfMonth) - 1;
+
+        // Create an array for the calendar grid
+        const calendarDays = Array.from({ length: adjustedFirstDay }, () => null) // Empty slots before the first day
+          .concat(Array.from({ length: daysInMonth }, (_, i) => i + 1)); // Days of the month
+
+        return calendarDays.map((day, index) => (
+          <div
+            key={index}
+            className={`text-center py-2 ${
+              day === new Date().getDate() ? 'bg-red-500 text-white rounded-full' : ''
+            }`}
+          >
+            {day || ''}
+          </div>
+        ));
+      })()}
+    </div>
+  </div>
+</div>
 
             {/* Study Hours Charts */}
             <div className="col-span-2 bg-white shadow-lg rounded-lg overflow-hidden">
