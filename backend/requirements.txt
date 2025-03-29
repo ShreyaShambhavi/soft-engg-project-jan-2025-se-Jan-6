@@ -55,3 +55,5 @@ sentence-transformers
 psycopg2-binary
 chromadb
 PyPDF2
+langchain
+langchain_ollama
