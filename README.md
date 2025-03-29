@@ -39,11 +39,21 @@ python -m venv .venv
 ```
 
 ### cd into the backend directory
+```
+cd backend
+```
+### Install the required libraries from the requirements.txt
+```
+pip install -r requirements.txt
+```
 
 ### Run the backend file:
 ```
+python pdf_embedding.py
 python run.py
 ```
+The backend should now be active at `http://localhost:5000/`
+
 
 ## Frontend:
 
@@ -97,6 +107,7 @@ Project Folder/
 | ├── transcripts/
 | ├── config.py
 | ├── requirements.txt
+| ├── pdf_embeddings.py
 | └── run.py
 |
 ├──frontend/
