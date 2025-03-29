@@ -1,9 +1,12 @@
+import os
+from PyPDF2 import PdfReader
+import chromadb
+import uuid
 from app import create_app
 from together import Together
 from flask import request, jsonify
 from flask_cors import CORS, cross_origin
 import logging
-import chromadb
 from pprint import pprint
 
 # Configure logging
@@ -26,18 +29,61 @@ client = Together(api_key=TOGETHER_API_KEY)
 # Define the model to use
 MODEL = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
 
-chroma_client = chromadb.PersistentClient(path="vectordb")
-collection = chroma_client.get_collection("pdf_embeddings")
-results = collection.get()
+# Set up ChromaDB client
+PERSIST_DIRECTORY = os.path.join(os.path.dirname(__file__), "vectordb")
+chroma_client = chromadb.PersistentClient(path=PERSIST_DIRECTORY)
+collection = chroma_client.get_or_create_collection(name="pdf_embeddings")
 
-# Store chat histories for different sessions
-chat_sessions = {}
+def extract_text_from_pdf(pdf_path):
+    text = ""
+    with open(pdf_path, 'rb') as file:
+        pdf_reader = PdfReader(file)
+        for page in pdf_reader.pages:
+            text += page.extract_text()
+    return text.strip()
 
-def retrive_embedding(query):
-    return collection.query(
-        query_texts=[query],
-        n_results=1
-    )
+def process_pdfs_in_folder(folder_path, prefix):
+    texts = []
+    ids = []
+    metadatas = []
+    print(f"Processing folder: {folder_path}, prefix: {prefix}")
+    
+    for filename in os.listdir(folder_path):
+        print(f"Processing file: {filename}")
+        if filename.endswith('.pdf'):
+            pdf_path = os.path.join(folder_path, filename)
+            try:
+                text = extract_text_from_pdf(pdf_path)
+                if text:
+                    unique_id = f"{prefix}_{str(uuid.uuid4())}"
+                    texts.append(text)
+                    ids.append(unique_id)
+                    metadatas.append({
+                        "source": filename,
+                        "folder": prefix
+                    })
+                    print(len(texts))
+            except Exception as e:
+                print(f"Error processing {filename}: {str(e)}")
+    
+    return texts, ids, metadatas
+
+def retrieve_embedding(query, category=None):
+    if category:
+        # Filter by metadata if specified
+        filtered_ids = [doc["id"] for doc in collection.get_all_documents() if doc["metadata"]["folder"] == category]
+        results = collection.query(
+            query_texts=[query],
+            n_results=1,
+            ids=filtered_ids
+        )
+    else:
+        results = collection.query(
+            query_texts=[query],
+            n_results=1
+        )
+    
+    return results
 
 # System prompt template for educational context
 def get_system_prompt(course_name=None):
@@ -45,6 +91,7 @@ def get_system_prompt(course_name=None):
     You are an educational AI assistant for IIT Madras' Degree in Data Science and Applications program.
 
     **Guidelines for Responses:**
+    - Don't start the conversation with telling the user that you have been provided lecture transcripts, and just introduce yourself briefly, and state your capabilities.
     - Only assist with questions related to Data Science, programming, and their applications. Do not answer questions outside this domain.
     - If a user asks a question outside of this scope (e.g., recipes, general trivia, etc.), do not provide an answer. Instead, politely decline by stating:
         "I am here to assist with topics related to Data Science and technical fields. For questions outside this scope, I recommend consulting other resources."
@@ -57,7 +104,7 @@ def get_system_prompt(course_name=None):
         - Explain concepts clearly but do not write complete code solutions.
         - Suggest improvements or corrections in code by pointing out specific issues and asking students to fix them on their own.
         - Provide step-by-step guidance for resolving errors while encouraging students to implement the changes themselves.
-    - Always maintain a friendly, supportive tone, acting like a mentor or peer who helps students learn through discussion rather than direct instruction.
+        - Always maintain a friendly, supportive tone, acting like a mentor or peer who helps students learn through discussion rather than direct instruction.
 
     **Examples of Behavior:**
     1. **Clarifying Concepts with Analogies:**
@@ -99,7 +146,6 @@ def get_system_prompt(course_name=None):
     """
 
 
-
 @app.route('/v1/chat', methods=['POST'])
 def chat():
     logger.info("Chatbot API endpoint called")
@@ -122,13 +168,22 @@ def chat():
             {"role": "system", "content": system_prompt}
         ]
 
-    embedding_context = retrive_embedding(user_message)
+    # Retrieve relevant embedding context
+    embedding_context = retrieve_embedding(user_message)
     embedding_context_text = embedding_context['documents'][0][0] if embedding_context.get('documents') else ""
 
     user_query_to_be_fed_to_llm = f"Original question: {user_message}\n\nRelevant context: {embedding_context_text}"
     
     # Add user message to session history
     chat_sessions[session_id].append({"role": "user", "content": user_query_to_be_fed_to_llm})
+    
+    # Dynamically manage chat history to prevent exceeding token limit
+    def manage_chat_history(chat_sessions, session_id, max_messages=10):
+        if len(chat_sessions[session_id]) > max_messages:
+            chat_sessions[session_id] = chat_sessions[session_id][-max_messages:]  # Keep only the last max_messages messages
+    
+    manage_chat_history(chat_sessions, session_id)
+    
     logger.debug(f"Current history length for session {session_id}: {len(chat_sessions[session_id])}")
     
     try:
@@ -177,6 +232,42 @@ def chatbot_status():
     })
 
 
-if __name__ == '__main__':
-    logger.info("Starting chatbot API server")
+def main():
+    global chat_sessions
+    chat_sessions = {}
+    
+    # Create vectordb directory if it doesn't exist
+    if not os.path.exists(PERSIST_DIRECTORY):
+        os.makedirs(PERSIST_DIRECTORY)
+
+    # Process PDFs from both folders
+    transcript_dir = os.path.join(os.path.dirname(__file__), "transcripts")
+    
+    # Process ST folder
+    st_folder = os.path.join(transcript_dir, "st")
+    if os.path.exists(st_folder):
+        st_texts, st_ids, st_metadatas = process_pdfs_in_folder(st_folder, "st")
+        if st_texts:
+            collection.add(
+                documents=st_texts,
+                ids=st_ids,
+                metadatas=st_metadatas
+            )
+    
+    # Process SE folder
+    se_folder = os.path.join(transcript_dir, "se")
+    if os.path.exists(se_folder):
+        se_texts, se_ids, se_metadatas = process_pdfs_in_folder(se_folder, "se")
+        if se_texts:
+            collection.add(
+                documents=se_texts,
+                ids=se_ids,
+                metadatas=se_metadatas
+            )
+    
+    # Run the Flask app
     app.run(debug=True, port=5000)
+
+
+if __name__ == "__main__":
+    main()
