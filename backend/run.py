@@ -3,7 +3,8 @@ from PyPDF2 import PdfReader
 import chromadb
 import uuid
 from app import create_app
-from together import Together
+from google.generativeai import GenerativeModel
+import google.generativeai as genai
 from flask import request, jsonify
 from flask_cors import CORS, cross_origin
 import logging
@@ -23,11 +24,13 @@ CORS(app, resources={
     r"/v1/chat": {"origins": ["http://localhost:5173", "http://localhost:5000", "http://localhost", "https://editor.swagger.io"], "supports_credentials": True}
 })
 
-TOGETHER_API_KEY = "e4496792b64a18f405d6f2ff88543aaa95b6e348d688c01e9ec8133a77b68476"
-client = Together(api_key=TOGETHER_API_KEY)
+# The API key will be provided by the user
+GEMINI_API_KEY = "AIzaSyByrMT_XKx0IatoBybBqEJZpxhDpjmYdsk"
+api_key = "AIzaSyByrMT_XKx0IatoBybBqEJZpxhDpjmYdsk"
+genai.configure(api_key=api_key)
 
 # Define the model to use
-MODEL = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
+MODEL = "gemini-1.5-pro"
 
 # Set up ChromaDB client
 PERSIST_DIRECTORY = os.path.join(os.path.dirname(__file__), "vectordb")
@@ -145,14 +148,31 @@ def get_system_prompt(course_name=None):
     Your role is to facilitate learning through discussion and guidance while encouraging critical thinking and independence in solving problems related to Data Science and programming.
     """
 
+# Initialize the Gemini API client
+def initialize_gemini_client(api_key):
+    genai.configure(api_key=api_key)
+    return True
 
 @app.route('/v1/chat', methods=['POST'])
 def chat():
+    global GEMINI_API_KEY
+    
     logger.info("Chatbot API endpoint called")
     data = request.json
     user_message = data.get('message', '')
     session_id = data.get('session_id', 'default')
     path_param = data.get('path_param', 'default').lower()
+    
+    # Check if API key is set, or use the one provided in the request
+    if not GEMINI_API_KEY:
+        GEMINI_API_KEY = data.get('api_key', '')
+        if not GEMINI_API_KEY:
+            return jsonify({
+                "success": False,
+                "message": "Gemini API key not provided"
+            })
+        # Initialize the API with the provided key
+        initialize_gemini_client(GEMINI_API_KEY)
     
     logger.debug(f"Request params - session_id: {session_id}, path_param: {path_param}")
     logger.debug(f"User message: '{user_message}'")
@@ -180,7 +200,10 @@ def chat():
     # Dynamically manage chat history to prevent exceeding token limit
     def manage_chat_history(chat_sessions, session_id, max_messages=10):
         if len(chat_sessions[session_id]) > max_messages:
-            chat_sessions[session_id] = chat_sessions[session_id][-max_messages:]  # Keep only the last max_messages messages
+            # Keep only the system message and the last (max_messages-1) messages
+            system_message = chat_sessions[session_id][0]
+            recent_messages = chat_sessions[session_id][-(max_messages-1):]
+            chat_sessions[session_id] = [system_message] + recent_messages
     
     manage_chat_history(chat_sessions, session_id)
     
@@ -188,18 +211,29 @@ def chat():
     
     try:
         # Log before API call
-        logger.info(f"Sending request to Together API - model: {MODEL}")
+        logger.info(f"Sending request to Gemini API - model: {MODEL}")
         
-        # Send the request to the LLM
-        response = client.chat.completions.create(
-            model=MODEL,
-            messages=chat_sessions[session_id],
-            max_tokens=1024,
-            temperature=0.7
-        )
+        # Convert chat history to Gemini format
+        gemini_messages = []
+        for msg in chat_sessions[session_id]:
+            if msg["role"] == "system":
+                # Add system prompt as a user message at the beginning
+                gemini_messages.append({"role": "user", "parts": [msg["content"]]})
+                gemini_messages.append({"role": "model", "parts": ["I understand my role as an educational AI assistant for IIT Madras' Degree in Data Science and Applications program. I'll follow the guidelines provided."]})
+            elif msg["role"] == "user":
+                gemini_messages.append({"role": "user", "parts": [msg["content"]]})
+            elif msg["role"] == "assistant":
+                gemini_messages.append({"role": "model", "parts": [msg["content"]]})
+        
+        # Create a Gemini model instance
+        model = GenerativeModel(MODEL)
+        
+        # Send the request to Gemini
+        chat = model.start_chat(history=gemini_messages[:-1])
+        response = chat.send_message(gemini_messages[-1]["parts"][0])
         
         # Get the model's response
-        assistant_response = response.choices[0].message.content
+        assistant_response = response.text
         logger.debug(f"Received response from API: '{assistant_response[:50]}...'")
         
         # Add the assistant's response to the session history
@@ -228,8 +262,41 @@ def chatbot_status():
     return jsonify({
         "status": "operational",
         "model": MODEL,
+        "api_key_set": bool(GEMINI_API_KEY),
         "active_sessions": len(chat_sessions)
     })
+
+
+# Add a route to set the API key
+@app.route('/v1/set-api-key', methods=['POST'])
+def set_api_key():
+    global GEMINI_API_KEY
+    
+    data = request.json
+    api_key = data.get('api_key', '')
+    
+    if not api_key:
+        return jsonify({
+            "success": False,
+            "message": "API key not provided"
+        })
+    
+    try:
+        # Update the API key
+        GEMINI_API_KEY = api_key
+        # Initialize the Gemini client with the new API key
+        success = initialize_gemini_client(GEMINI_API_KEY)
+        
+        return jsonify({
+            "success": success,
+            "message": "API key set successfully"
+        })
+    except Exception as e:
+        logger.error(f"Error setting API key: {str(e)}", exc_info=True)
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        })
 
 
 def main():
