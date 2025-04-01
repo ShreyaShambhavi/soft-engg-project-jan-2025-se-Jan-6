@@ -13,11 +13,6 @@ const Home = () => {
             alt="IIT Madras Logo" 
             className="w-60 h-12 rounded"
           />
-          {/*<span className="ml-2 text-sm font-medium">
-            IIT Madras
-            <br />
-            Degree in Data Science and Applications
-          </span>*/}
         </div>
         
         <div className="flex items-center space-x-6">

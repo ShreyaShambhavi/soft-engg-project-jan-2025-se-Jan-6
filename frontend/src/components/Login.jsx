@@ -1,26 +1,26 @@
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext"; // ✅ Import AuthContext
-import { useNavigate } from "react-router-dom";  // ✅ For redirection
+import { useAuth } from "../context/AuthContext"; 
+import { useNavigate } from "react-router-dom";  
 import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
-  const { login } = useAuth();  // ✅ Get login function from context
+  const { login } = useAuth();  
   const navigate = useNavigate();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // ✅ State for password visibility
+  const [showPassword, setShowPassword] = useState(false); 
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
 
     try {
-      await login(email, password);  // ✅ Call login API
-      navigate("/dashboard");        // ✅ Redirect on success
+      await login(email, password);  
+      navigate("/dashboard");        
     } catch (err) {
-      setError(err.message);         // ✅ Show error message if login fails
+      setError(err.message);         
     }
   };
 
@@ -50,7 +50,7 @@ const Login = () => {
             <div className="bg-white p-8 rounded-lg shadow-sm">
               <h2 className="text-2xl font-semibold mb-4">Log in</h2>
 
-              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}  {/* ✅ Show Error */}
+              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}  
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
@@ -71,10 +71,10 @@ const Login = () => {
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)} // **Line 52: Toggle visibility**
+                    onClick={() => setShowPassword(!showPassword)} 
                     className="absolute right-3 top-3 text-gray-400"
                   >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />} {/* **Line 53: Toggle icon** */}
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />} 
                   </button>
 
               

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Bell, User, ChevronDown, Home, Book, Calendar, Users, FileText, Download, Bot } from 'lucide-react';
+import { ChevronDown, Bot } from 'lucide-react';
 
 const GradedAssignment = () => {
   const [activeTab, setActiveTab] = useState('Content');
@@ -7,7 +7,7 @@ const GradedAssignment = () => {
   
   const weeks = Array.from({ length: 12 }, (_, i) => ({
     number: i + 1,
-    isActive: i === 4, // Week 5 is active
+    isActive: i === 4,
   }));
 
   const navigationTabs = ['Content', 'Quizzes', 'End Term'];
@@ -38,10 +38,6 @@ const GradedAssignment = () => {
         <div className="p-4 border-b">
           <div className="flex items-center gap-2">
             <img src="/IITm.png" alt="IIT Madras Logo" className="w-60 h-12 rounded" />
-            {/*<div className="text-sm">
-              <div className="font-semibold">IIT Madras</div>
-              <div className="text-xs text-gray-600">Degree in Data Science and Applications</div>
-            </div>*/}
           </div>
         </div>
 

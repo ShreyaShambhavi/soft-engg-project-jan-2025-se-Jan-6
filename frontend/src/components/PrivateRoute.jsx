@@ -15,12 +15,12 @@ const PrivateRoute = ({ element: Component, ...rest }) => {
       setTimeout(() => {
         setShowModal(false);
         setRedirect(true);
-      }, 1500); // Show the modal for 1.5 seconds
+      }, 1500); 
     }
   }, [loading, user]);
 
   if (loading) {
-    return <div>Loading...</div>; // You can replace this with a loading spinner or any other loading indicator
+    return <div>Loading...</div>; 
   }
 
   if (redirect) {

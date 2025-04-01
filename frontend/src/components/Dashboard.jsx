@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, LineChart, Line, ResponsiveContainer } from "recharts";
-import { Bell, Home, Calendar, Users, BookOpen, Download, X, LayoutDashboard, BookCopy } from "lucide-react";
+import { Home, Calendar, LayoutDashboard, BookCopy } from "lucide-react";
 import LogoutButton from "./LogoutButton";
 
 const Dashboard = () => {

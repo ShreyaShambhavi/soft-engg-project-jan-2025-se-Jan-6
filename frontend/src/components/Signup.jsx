@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, ChevronDown, Check } from 'lucide-react';
-import { useAuth } from '../context/AuthContext'; // Import useAuth instead of AuthContext
+import { useAuth } from '../context/AuthContext'; 
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -50,10 +50,9 @@ const Signup = () => {
         throw new Error(await signupResponse.text());
       }
 
-      // If signup is successful, proceed to login
       try {
-        await login(email, password); // Pass email and password to login function
-        // Navigation will be handled by the login function if successful
+        await login(email, password); 
+        
         navigate('/dashboard');
       } catch (loginError) {
         throw new Error('Signup successful but could not log in automatically. Please log in manually.');
@@ -61,7 +60,6 @@ const Signup = () => {
     } catch (err) {
       setError(err.message);
       if (err.message.includes('Signup successful')) {
-        // If signup was successful but login failed, redirect to login
         setTimeout(() => navigate('/login'), 2000);
       }
     }

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Search, Bell } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 const CourseChatBotMini = ({ courseName }) => {

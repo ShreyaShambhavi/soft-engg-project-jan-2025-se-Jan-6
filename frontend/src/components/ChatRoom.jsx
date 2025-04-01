@@ -5,7 +5,6 @@ import { Search, Bell, MoreHorizontal, Paperclip, Image, MapPin, Send, ChevronDo
 import axios from 'axios';
 
 const StudyChatRoom = () => {
-  // Keep existing state variables
   const { courseId } = useParams();
   const navigate = useNavigate();
   const [chatRooms, setChatRooms] = useState([]);
@@ -13,41 +12,36 @@ const StudyChatRoom = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [members, setMembers] = useState([]);
-  const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
   // Add new state variables for editing
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editedMessageText, setEditedMessageText] = useState('');
-  const [messageActionsId, setMessageActionsId] = useState(null); // Which message shows its actions menu
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null); // Which message is awaiting delete confirmation
+  const [messageActionsId, setMessageActionsId] = useState(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null); 
   
   const messagesEndRef = useRef(null);
   const messageUpdateInterval = useRef(null);
-  const editInputRef = useRef(null); // Reference to the edit input field
+  const editInputRef = useRef(null); 
 
-  // Scroll to bottom of messages
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Memoize fetch functions with useCallback to avoid dependency issues
   const fetchChatRooms = useCallback(async () => {
     try {
       const response = await axios.get('http://127.0.0.1:5000/api/v1/chatrooms', {
         withCredentials: true
       });
       
-      // Process the received chatrooms to ensure we have the last message info
       const roomsWithMsgInfo = await Promise.all(response.data.chatrooms.map(async room => {
-        // For each chatroom, make an additional request to get latest message
         try {
           const msgResponse = await axios.get(`http://127.0.0.1:5000/api/v1/messages/${room.id}`, {
             withCredentials: true
           });
           
-          // Get the most recent message if any exists
           const messages = msgResponse.data.messages || [];
           const latestMessage = messages.length > 0 ? messages[messages.length - 1] : null;
           
@@ -59,20 +53,18 @@ const StudyChatRoom = () => {
           };
         } catch (err) {
           console.error(`Error fetching messages for room ${room.id}:`, err);
-          return room; // Return original room data if message fetch fails
+          return room;
         }
       }));
       
       setChatRooms(roomsWithMsgInfo);
       
-      // If courseId is provided, select that chatroom
       if (courseId) {
         const selectedRoom = roomsWithMsgInfo.find(room => room.courseId === parseInt(courseId));
         if (selectedRoom) {
           setSelectedChatRoom(selectedRoom);
         }
       } else if (roomsWithMsgInfo.length > 0) {
-        // Otherwise select the first chatroom
         setSelectedChatRoom(roomsWithMsgInfo[0]);
       }
     } catch (err) {
@@ -83,7 +75,6 @@ const StudyChatRoom = () => {
     }
   }, [courseId]);
 
-  // Fetch messages for a chatroom
   const fetchMessages = useCallback(async (chatroomId) => {
     if (!chatroomId) return;
     
@@ -98,7 +89,6 @@ const StudyChatRoom = () => {
     }
   }, []);
 
-  // Fetch course members
   const fetchCourseMembers = useCallback(async (courseId) => {
     if (!courseId) return;
     
@@ -112,7 +102,6 @@ const StudyChatRoom = () => {
     }
   }, []);
 
-  // Send a message
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedChatRoom) return;
@@ -125,7 +114,6 @@ const StudyChatRoom = () => {
         withCredentials: true
       });
       
-      // Add the new message to the messages list
       setMessages(prevMessages => [...prevMessages, response.data.messageData]);
       setNewMessage('');
       setTimeout(scrollToBottom, 100);
@@ -134,34 +122,27 @@ const StudyChatRoom = () => {
     }
   };
 
-  // Initial load - only runs once
   useEffect(() => {
     fetchChatRooms();
     
     return () => {
-      // Clean up interval on component unmount
       if (messageUpdateInterval.current) {
         clearInterval(messageUpdateInterval.current);
         messageUpdateInterval.current = null;
       }
     };
-  }, [fetchChatRooms]); // fetchChatRooms is now stable with useCallback
+  }, [fetchChatRooms]);
 
-  // Handle message polling and cleanup when selectedChatRoom changes
   useEffect(() => {
-    // Clear any existing interval
     if (messageUpdateInterval.current) {
       clearInterval(messageUpdateInterval.current);
       messageUpdateInterval.current = null;
     }
     
-    // Only set up polling if we have a selected chatroom
     if (selectedChatRoom?.id) {
-      // Immediately fetch messages
       fetchMessages(selectedChatRoom.id);
       fetchCourseMembers(selectedChatRoom.courseId);
       
-      // Then set up polling
       messageUpdateInterval.current = setInterval(() => {
         fetchMessages(selectedChatRoom.id);
       }, 5000);
@@ -175,9 +156,6 @@ const StudyChatRoom = () => {
     };
   }, [selectedChatRoom, fetchMessages, fetchCourseMembers]);
 
-  // Rest of your component remains the same...
-
-  // Format timestamp for display
   const formatTime = (isoString) => {
     const date = new Date(isoString);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -198,7 +176,6 @@ const StudyChatRoom = () => {
     }
   };
 
-  // Generate avatar initials and color
   const getAvatarInfo = (username) => {
     if (!username) return { initials: '?', color: 'bg-gray-500' };
     
@@ -212,17 +189,13 @@ const StudyChatRoom = () => {
     };
   };
 
-  // Add new function to handle edit message
   const handleEditMessage = async (messageId) => {
-    // Find the message to edit
     const messageToEdit = messages.find(msg => msg.id === messageId);
     if (!messageToEdit) return;
     
-    // Set editing state
     setEditingMessageId(messageId);
     setEditedMessageText(messageToEdit.message);
     
-    // Focus the edit input after it renders
     setTimeout(() => {
       if (editInputRef.current) {
         editInputRef.current.focus();
@@ -230,7 +203,6 @@ const StudyChatRoom = () => {
     }, 50);
   };
 
-  // Add function to save edited message
   const saveEditedMessage = async () => {
     if (!editingMessageId || !editedMessageText.trim()) {
       setEditingMessageId(null);
@@ -252,41 +224,33 @@ const StudyChatRoom = () => {
             : msg
         )
       );
-      
-      // Clear editing state
+
       setEditingMessageId(null);
       setEditedMessageText('');
     } catch (err) {
       console.error('Error editing message:', err);
-      // Optionally show an error notification
     }
   };
 
-  // Add function to cancel editing
   const cancelEditMessage = () => {
     setEditingMessageId(null);
     setEditedMessageText('');
   };
 
-  // Add function to handle delete message
   const handleDeleteMessage = async (messageId) => {
     try {
       await axios.delete(`http://127.0.0.1:5000/api/v1/messages/${messageId}`, {
         withCredentials: true
       });
       
-      // Remove the message from the local state
       setMessages(prevMessages => prevMessages.filter(msg => msg.id !== messageId));
       
-      // Clear delete confirmation state
       setDeleteConfirmId(null);
     } catch (err) {
       console.error('Error deleting message:', err);
-      // Optionally show an error notification
     }
   };
 
-  // Add keyboard event handler for edit mode
   const handleEditKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -296,7 +260,6 @@ const StudyChatRoom = () => {
     }
   };
 
-  // When clicking outside message actions, close the menu
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (messageActionsId && !event.target.closest('.message-actions')) {
@@ -356,8 +319,6 @@ const StudyChatRoom = () => {
         {/* Study Chat Rooms */}
         <div className="p-4">
           <h2 className="text-lg font-semibold mb-4">Study Chat Rooms</h2>
-          
-          {/* Removed the Personal/Group tab selection */}
 
           {/* Chat List */}
           <div className="space-y-2">

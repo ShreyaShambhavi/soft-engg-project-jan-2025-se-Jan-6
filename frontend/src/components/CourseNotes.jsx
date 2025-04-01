@@ -2,21 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Home, Calendar, Users, Download, BookOpen, PlusCircle, 
-  Save, Trash2, X, Edit, RotateCw, AlertCircle, ChevronDown,
+  Save, Trash2, Edit, AlertCircle, ChevronDown,
   ChevronRight, Search, Bell, UserCircle
 } from 'lucide-react';
 import axios from 'axios';
 
-const COURSE_ID_MAP = {
-  'Artificial Intelligence': 1,
-  'Deep Learning': 2,
-  'Software Engineering': 3,
-  'Software Testing': 4
-};
-
 const CourseNotes = () => {
   const navigate = useNavigate();
-  const editorRef = useRef(null);
   
   // UI States
   const [activeIcon, setActiveIcon] = useState('Books');
@@ -49,14 +41,12 @@ const CourseNotes = () => {
       if (response.data && response.data.courses) {
         setUserCourses(response.data.courses);
         
-        // Initialize expanded state for each course
         const expanded = {};
         response.data.courses.forEach(course => {
-          expanded[course.id] = true; // Start with all courses expanded
+          expanded[course.id] = true;
         });
         setExpandedCourses(expanded);
         
-        // Fetch notes for each course
         await Promise.all(response.data.courses.map(course => fetchNotesForCourse(course.id)));
       }
     } catch (error) {

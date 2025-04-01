@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, Search, Bell, BookOpen, Calendar, Users2, FileText, Download, BookCopy, LayoutDashboard, FolderDown, FileQuestion, NotebookPen, Bot, MessagesSquare, ChevronDown, ChevronRight } from 'lucide-react';
+import { Home, Search, Bell, BookCopy, LayoutDashboard, FolderDown, FileQuestion, NotebookPen, Bot, MessagesSquare, ChevronDown, ChevronRight } from 'lucide-react';
 import CourseChatBotMini from './CourseChatBotMini';
 import LectureViewer from './LectureViewer';
 import AssignmentViewer from './AssignmentViewer';
@@ -34,7 +34,6 @@ function CoursePage() {
 
     useEffect(() => {
         fetchCourseData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [courseName]);
 
     const fetchCourseData = async () => {

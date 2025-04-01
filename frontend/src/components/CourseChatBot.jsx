@@ -10,13 +10,10 @@ const CourseChatBot = ({ courseName }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState('');
   const messagesEndRef = useRef(null);
-  const inputRef = useRef(null); // Create a ref for the input
-
-  // Extract path parameter from URL
+  const inputRef = useRef(null); 
   const location = useLocation();
   const pathSegment = location.pathname.split('/').filter(segment => segment).pop() || 'default';
 
-  // Auto-scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -24,20 +21,17 @@ const CourseChatBot = ({ courseName }) => {
   const sidebarItems = [
   ];
 
-  // Handle sending message to API
   const handleSendMessage = async (e) => {
-    e.preventDefault(); // Prevent default form submission
+    e.preventDefault(); 
     if (!inputMessage.trim()) return;
 
     try {
-      setIsLoading(true); // Set loading state
+      setIsLoading(true); 
 
-      // Add user message to chat
       const userMessage = { type: 'user', content: inputMessage };
       setMessages(prev => [...prev, userMessage]);
       setInputMessage('');
 
-      // Send message to API with path parameter
       const response = await fetch('http://localhost:5000/v1/chat', {
         method: 'POST',
         headers: {
@@ -45,19 +39,17 @@ const CourseChatBot = ({ courseName }) => {
         },
         body: JSON.stringify({
           message: inputMessage,
-          session_id: username || 'default', // Use username as session ID if available
-          path_param: pathSegment.toLowerCase() // Send the path parameter to backend
+          session_id: username || 'default', 
+          path_param: pathSegment.toLowerCase() 
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        // Add API response to chat
         const botMessage = { type: 'bot', content: data.response };
         setMessages(prev => [...prev, botMessage]);
       } else {
-        // Handle error
         const errorMessage = { type: 'error', content: 'Sorry, there was an error processing your message.' };
         setMessages(prev => [...prev, errorMessage]);
       }
@@ -67,18 +59,16 @@ const CourseChatBot = ({ courseName }) => {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
-      setTimeout(() => inputRef.current.focus(), 100); // Focus on the input after sending
+      setTimeout(() => inputRef.current.focus(), 100);
     }
   };
 
-  // Handle Enter key press
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
-      handleSendMessage(e); // Call the submit handler on Enter press
+      handleSendMessage(e); 
     }
   };
 
-  // Custom Message Component with Markdown support
   const MessageBubble = ({ message }) => {
     const isUser = message.type === 'user';
     const isError = message.type === 'error';
@@ -100,7 +90,6 @@ const CourseChatBot = ({ courseName }) => {
             <div className="markdown-content">
               <ReactMarkdown
                 components={{
-                  // Customize how markdown elements are rendered
                   p: ({ node, ...props }) => <p className="mb-2" {...props} />,
                   h1: ({ node, ...props }) => <h1 className="text-xl font-bold mb-2" {...props} />,
                   h2: ({ node, ...props }) => <h2 className="text-lg font-bold mb-2" {...props} />,
@@ -108,7 +97,6 @@ const CourseChatBot = ({ courseName }) => {
                   ul: ({ node, ...props }) => <ul className="list-disc ml-4 mb-2" {...props} />,
                   ol: ({ node, ...props }) => <ol className="list-decimal ml-4 mb-2" {...props} />,
                   li: ({ node, ...props }) => <li className="mb-1" {...props} />,
-                  // Handle links with custom styling and target="_blank" for external links
                   a: ({ node, href, ...props }) => (
                     <a 
                       href={href} 
@@ -153,10 +141,6 @@ const CourseChatBot = ({ courseName }) => {
         <div className="p-4 border-b">
           <div className="flex items-center gap-2">
             <img src="/IITm.png" alt="IIT Madras Logo" className="w-60 h-12 rounded" />
-            {/*<div className="text-sm">
-              <div className="font-semibold">IIT Madras</div>
-              <div className="text-xs text-gray-600">Degree in Data Science and Applications</div>
-            </div>*/}
           </div>
         </div>
 
@@ -230,13 +214,13 @@ const CourseChatBot = ({ courseName }) => {
           <form onSubmit={handleSendMessage} className="flex items-center gap-2">
             <input
               type="text"
-              ref={inputRef} // Assign the ref to the input
+              ref={inputRef} 
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="What are Transformers?"
               className="flex-1 outline-none text-sm p-3 border rounded-lg"
               disabled={isLoading}
-              onKeyPress={handleKeyPress} // Handle Enter key press
+              onKeyPress={handleKeyPress} 
             />
             <button
               type="submit"

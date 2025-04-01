@@ -1,7 +1,4 @@
-/* eslint-disable no-unused-vars */
-// eslint-disable-next-line no-unused-vars
 import React, { useState } from 'react';
-// eslint-disable-next-line no-unused-vars
 import { Home, Calendar, Users, Download, BookOpen, Eye } from 'lucide-react';
 
 
@@ -48,7 +45,6 @@ const PYQs = () => {
     const relativePath = pdfFiles[monthName];
     const fullUrl = window.location.origin + relativePath;
     if (withParams) {
-      // Add parameters to disable some browser PDF viewer controls for better embedding
       return `${fullUrl}#toolbar=0&navpanes=0`;
     }
     return fullUrl;
