@@ -34,8 +34,14 @@ python -m venv .venv
 ```
 
 ### Activate the venv:
+
+#### (For Windows)
 ```
 .\venv\Scripts\activate
+```
+#### (For Linux)
+```
+source ./.venv/bin.activate
 ```
 
 ### cd into the backend directory
