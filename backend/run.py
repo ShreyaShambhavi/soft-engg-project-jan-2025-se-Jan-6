@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 from PyPDF2 import PdfReader
 import chromadb
 import uuid
@@ -9,6 +10,7 @@ from flask import request, jsonify
 from flask_cors import CORS, cross_origin
 import logging
 from pprint import pprint
+
 
 # Configure logging
 logging.basicConfig(
@@ -24,13 +26,16 @@ CORS(app, resources={
     r"/v1/chat": {"origins": ["http://localhost:5173", "http://localhost:5000", "http://localhost", "https://editor.swagger.io"], "supports_credentials": True}
 })
 
+load_dotenv()
+
+
 # The API key will be provided by the user
-GEMINI_API_KEY = "AIzaSyByrMT_XKx0IatoBybBqEJZpxhDpjmYdsk"
-api_key = "AIzaSyByrMT_XKx0IatoBybBqEJZpxhDpjmYdsk"
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+api_key = os.getenv('GEMINI_API_KEY')
 genai.configure(api_key=api_key)
 
 # Define the model to use
-MODEL = "gemini-1.5-pro"
+MODEL = "gemini-2.0-flash"
 
 # Set up ChromaDB client
 PERSIST_DIRECTORY = os.path.join(os.path.dirname(__file__), "vectordb")
